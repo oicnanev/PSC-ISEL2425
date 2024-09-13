@@ -3,8 +3,8 @@
 unsigned short date_pack(int y, int m, int d) {
 	// Code years from 2000
 	unsigned short year = (y - 2000) << 9;  // year uses bits 15..9
-	unsigned short month = m << 5;          // month uses bits 8..5
-	unsigned day = d;
+	unsigned short month = (m & 0xF) << 5;          // month uses bits 8..5
+	unsigned day = d & 0x1F;
 	return year | month | day; // the bitwise OR sums all bits
 }
 
@@ -20,7 +20,7 @@ int date_unpack_month(unsigned short date) {
 
 int date_unpack_day(unsigned short date) {
 	// AND mask with 0001 1111 (0x1F)
-	return date & 0x1F
+	return date & 0x1F;
 }
 
 int main() {
@@ -28,10 +28,10 @@ int main() {
 
 	unsigned short packed_date = date_pack(year, month, day);
 
-	printf("Packed date - %u\n", packed_date);
-	printf("Unpacked year - %d\n", date_unpack_year(packed_date));
-	printf("Unpacked month - %d\n", date_unpack_month(packed_date));
-	printf("Unpacked day - %d\n", date_unpack_day(packed_date));
+	printf("Packed date - %u [0x%x]\n", packed_date, packed_date);
+	printf("Unpacked year - %d [0x%x]\n", date_unpack_year(packed_date), date_unpack_year(packed_date));
+	printf("Unpacked month - %d [0x%x]\n", date_unpack_month(packed_date), date_unpack_month(packed_date));
+	printf("Unpacked day - %d [0x%x]\n", date_unpack_day(packed_date), date_unpack_day(packed_date));
 
 	return 0;
 }

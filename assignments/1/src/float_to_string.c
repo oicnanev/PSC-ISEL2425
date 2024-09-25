@@ -1,9 +1,10 @@
 #include <stdio.h>
 
 #define BUFFER_SIZE 14
+#define SINGLE_PRECISION_VALUE 127
 
 size_t float_to_string( float value, char buffer[], size_t buffer_size ){
-	//const char *digits = "0123456789";
+	/*  ESTA PARTE ESTÁ MAL ******************************************************************************
 
 	// Multiplica o 'value' por 1 000 000 para lidar com as 6 casas decimais necessárias.
 	// Usa-se long long para garantir portabilidade entre tecnologias, long long será sempre 64 bits
@@ -55,7 +56,24 @@ size_t float_to_string( float value, char buffer[], size_t buffer_size ){
     }
 
     // Retorna o número de caracteres escritos
-    return pos;	
+    return pos;
+    ********************************************************************************************** */
+    // criação de uma união constituida por uma extrutura de 'bit fields' e um float
+    typedef union {
+    	struct {
+    		unsigned int mantissa: 23;
+    		unsigned int exponent: 8;
+    		unsigned int signal: 1;
+    	};
+    	float _float;
+    } Float_Bit_Fields;
+
+    Float_Bit_Fields float_bit_fields = value;  // passar o float recebido
+
+    int signal = float_bit_fields.signal;
+    int exponent = float_bit_fields.exponent - SINGLE_PRECISION_VALUE;
+    int normalized_value = (1 << 23) | float_bit_fields.mantissa  // adicionar o '1,' que falta 
+
 }
 
 int main(){

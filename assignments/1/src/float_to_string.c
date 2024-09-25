@@ -74,6 +74,19 @@ size_t float_to_string( float value, char buffer[], size_t buffer_size ){
     int exponent = float_bit_fields.exponent - SINGLE_PRECISION_VALUE;
     int normalized_value = (1 << 23) | float_bit_fields.mantissa  // adicionar o '1,' que falta 
 
+    int deslocament = 23 - exponent;
+    int integer_part = normalized_value >> deslocament;
+
+    // escrever sinal no buffer e noramalizar parte inteira se for negativo
+    if (signal) {
+    	*buffer = '+';
+    } else {
+    	*buffer = '-';
+    	integer_part *= -1;
+    }
+
+
+
 }
 
 int main(){

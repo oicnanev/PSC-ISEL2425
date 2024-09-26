@@ -25,14 +25,11 @@
  * 45824 Nuno Venâncio
  */
 
-#define VALUE_TO_CONVERT 4294967295  // maior unsigned int
-#define BUFFER_SIZE 35  // 2 do prefixo + 32 digitos binarios + '/0' para o maior unsigned int em binário
 #define INT_SIZE sizeof(int)
 #define CHAR_SIZE sizeof(char)
 #define BYTE 8  // 1 Byte = 8 bits
 
 size_t int_to_string(unsigned value, int base, char buffer[], size_t buffer_size) {
-    const char *digits = "0123456789ABCDEF";
 
     //Um int em digitos binários são 32 digitos x 8 + '\0' = 40
     const long temp_buffer_size = (INT_SIZE * BYTE + CHAR_SIZE * BYTE);
@@ -43,25 +40,30 @@ size_t int_to_string(unsigned value, int base, char buffer[], size_t buffer_size
     char temp[temp_buffer_size];
     size_t length = 0;
     int i = 0;
-    int base_prefix_len = 0;  // Para remover o tamanho do prefixo no retorno
+    //int base_prefix_len = 0;  // Para remover o tamanho do prefixo no retorno
 
     // Prefixos para bases 2, 8 e 16
     if (base == 2) {
         buffer[length++] = '0';
         buffer[length++] = 'b';
-        base_prefix_len = 2;
+        //base_prefix_len = 2;
     } else if (base == 8) {
         buffer[length++] = '0';
-        base_prefix_len++;
+        //base_prefix_len++;
     } else if (base == 16) {
         buffer[length++] = '0';
         buffer[length++] = 'x';
-        base_prefix_len = 2;
+        //base_prefix_len = 2;
     }
 
     // Conversão do valor para a string na base especificada
     do {
-        temp[i++] = digits[value % base];
+        int remainder = value % base;
+        if (remainder < 10) {
+            temp[i++] = remainder + '0';    
+        } else {
+            temp[i++] = remainder + 'A' - 10;  
+        }
         value /= base;
     } while (value > 0);
 
@@ -78,29 +80,6 @@ size_t int_to_string(unsigned value, int base, char buffer[], size_t buffer_size
 
     buffer[length] = '\0'; // Termina a string com null
 
-    return length - base_prefix_len;
+    return length; //- base_prefix_len;
  }
-
-int main() {
-    const int BIN = 2;
-    const int OCT = 8;
-    const int DEC = 10;
-    const int HEX = 16;
-
-    char buffer[BUFFER_SIZE];
-    size_t length;
-
-    length = int_to_string(VALUE_TO_CONVERT, BIN, buffer, sizeof(buffer));
-    printf("Binário: %s (length: %zu)\n", buffer, length);
-
-    length = int_to_string(VALUE_TO_CONVERT, OCT, buffer, sizeof(buffer));
-    printf("Octal: %s (length: %zu)\n", buffer, length);
-
-    length = int_to_string(VALUE_TO_CONVERT, DEC, buffer, sizeof(buffer));
-    printf("Decimal: %s (length: %zu)\n", buffer, length);
-
-    length = int_to_string(VALUE_TO_CONVERT, HEX, buffer, sizeof(buffer));
-    printf("Hexadecimal: %s (length: %zu)\n", buffer, length);
-
-    return 0;
-}
+ 

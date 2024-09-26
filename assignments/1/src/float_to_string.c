@@ -4,60 +4,7 @@
 #define SINGLE_PRECISION_VALUE 127
 
 size_t float_to_string( float value, char buffer[], size_t buffer_size ){
-	/*  ESTA PARTE ESTÁ MAL ******************************************************************************
 
-	// Multiplica o 'value' por 1 000 000 para lidar com as 6 casas decimais necessárias.
-	// Usa-se long long para garantir portabilidade entre tecnologias, long long será sempre 64 bits
-	long long int_value = (long long)(value * 1000000);
-
-	// se negativo, tornalo positivo
-	int is_negative = int_value < 0;
-	if (is_negative){
-		int_value = -int_value;
-	} 
-
-	// separar a parte inteira e a parte fracionaria
-	long long int_part = int_value / 1000000;
-	long long frac_part = int_value % 1000000;
-
-
-	// construção da string --------------------------------------------------
-	int pos = 0;
-	if (is_negative) {
-		buffer[pos++] = '-';
-	}
-
-	// parte inteira
-    char int_str[20];
-    sprintf(int_str, "%lld", int_part);
-    for (size_t i = 0; int_str[i] != '\0'; ++i) {
-        if (pos < buffer_size - 1) {
-            buffer[pos++] = int_str[i];
-        }
-    }
-
-    // ponto (separador)
-    buffer[pos++] = '.';
-
-    // parte fracionária
-    char frac_str[7];
-    sprintf(frac_str, "%06lld", frac_part);
-    for (size_t i = 0; frac_str[i] != '\0'; ++i) {
-        if (pos < buffer_size - 1) {
-            buffer[pos++] = frac_str[i];
-        }
-    }
-
-    // Adiciona o caractere nulo final
-    if (pos < buffer_size) {
-        buffer[pos] = '\0';
-    } else {
-        buffer[buffer_size - 1] = '\0';
-    }
-
-    // Retorna o número de caracteres escritos
-    return pos;
-    ********************************************************************************************** */
     // criação de uma união constituida por uma extrutura de 'bit fields' e um float
     typedef union {
     	struct {
@@ -68,30 +15,63 @@ size_t float_to_string( float value, char buffer[], size_t buffer_size ){
     	float _float;
     } Float_Bit_Fields;
 
-    Float_Bit_Fields float_bit_fields = value;  // passar o float recebido
+    Float_Bit_Fields float_bit_fields;
+    float_bit_fields._float = value;  // passar o float recebido
 
     int signal = float_bit_fields.signal;
     int exponent = float_bit_fields.exponent - SINGLE_PRECISION_VALUE;
-    int normalized_value = (1 << 23) | float_bit_fields.mantissa  // adicionar o '1,' que falta 
+    int normalized_value = (1 << 23) | float_bit_fields.mantissa;  // adicionar o '1,' que falta 
 
+    // DEBUG lines -----------------------------------------------------------------------------
+    printf("Signal: %d\n", signal);
+    printf("Exponent: %d\n", exponent);
+    printf("Normalized Value: %d\n", normalized_value);
+    // ------------------------------------------------------------------------------------------
+
+    // parte inteira
     int deslocament = 23 - exponent;
     int integer_part = normalized_value >> deslocament;
 
+    printf("Integer part: %d\n", integer_part);
+
+    // TODO: parte fracionária - NAO ESTA CORRETO #################################################
+    float fractional_value = value - (float)integer_part;
+    unsigned int fractional_part = (unsigned int) (fractional_value * 1000000);
+    printf("Fraction part: %u\n", fractional_part); 
+
     // escrever sinal no buffer e noramalizar parte inteira se for negativo
+    size_t index = 0;
     if (signal) {
-    	*buffer = '+';
-    } else {
-    	*buffer = '-';
+    	buffer[index++] = '-';
     	integer_part *= -1;
+    } else {
+    	buffer[index++] = '+';
     }
 
+    // Escrever parte inteira no buffer
+    index += snprintf(buffer + index, buffer_size - index, "%d", integer_part);
 
+    // Escrever ponto decimal e parte fracionária no buffer
+    index += snprintf(buffer + index, buffer_size - index, ".%06u", fractional_part);
 
+    // Garantir que o buffer seja nulo-terminado
+    buffer[index] = '\0';
+
+    return index;
 }
 
 int main(){
-	float num = -123.123456;
+	float num = -123.123459;
 	char buffer[BUFFER_SIZE];
-	printf("The number %f is stored in %ld characters\n", num, float_to_string(num, buffer, sizeof(buffer)));
+	printf("The number %f is stored in %ld characters\n\n", num, float_to_string(num, buffer, sizeof(buffer)));
+
+	num = 0.0;
+	printf("The number %f is stored in %ld characters\n\n", num, float_to_string(num, buffer, sizeof(buffer)));
+
+	num = 1.1;
+	printf("The number %f is stored in %ld characters\n\n", num, float_to_string(num, buffer, sizeof(buffer)));
+
+	num = 123.123456789;
+	printf("The number %f is stored in %ld characters\n\n", num, float_to_string(num, buffer, sizeof(buffer)));
 	return 0;
 }

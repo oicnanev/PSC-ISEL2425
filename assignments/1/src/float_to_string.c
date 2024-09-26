@@ -2,6 +2,7 @@
 
 #define BUFFER_SIZE 14
 #define SINGLE_PRECISION_VALUE 127
+#define NUM_DECIMAL_DIGITS 1000000  // para multiplicar e obter 6 digitos de precisão na parte fracionaria
 
 size_t float_to_string( float value, char buffer[], size_t buffer_size ){
 
@@ -35,9 +36,12 @@ size_t float_to_string( float value, char buffer[], size_t buffer_size ){
     printf("Integer part: %d\n", integer_part);
 
     // TODO: parte fracionária - NAO ESTA CORRETO #################################################
-    float fractional_value = value - (float)integer_part;
-    unsigned int fractional_part = (unsigned int) (fractional_value * 1000000);
-    printf("Fraction part: %u\n", fractional_part); 
+    int fraction_mask = (1 << deslocament) - 1;
+    int fraction_part = normalized_value & fraction_mask;
+    //float fraction_value = (float)fraction_part / (1 << deslocament);  // OPERAÇÂO COM FLOATS NÂO PERMITIDA
+    int fraction_value = (fraction_part * NUM_DECIMAL_DIGITS) / (1 << deslocament);  // Está mal
+    
+    printf("Fraction value: %d\n", fraction_value); 
 
     // escrever sinal no buffer e noramalizar parte inteira se for negativo
     size_t index = 0;
@@ -52,7 +56,7 @@ size_t float_to_string( float value, char buffer[], size_t buffer_size ){
     index += snprintf(buffer + index, buffer_size - index, "%d", integer_part);
 
     // Escrever ponto decimal e parte fracionária no buffer
-    index += snprintf(buffer + index, buffer_size - index, ".%06u", fractional_part);
+    index += snprintf(buffer + index, buffer_size - index, ".%06u", fraction_part);
 
     // Garantir que o buffer seja nulo-terminado
     buffer[index] = '\0';

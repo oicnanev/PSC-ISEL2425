@@ -41,14 +41,33 @@ size_t float_to_string(float value, char buffer[], size_t buffer_size) {
 
   // parte inteira
   int deslocament = 23 - exponent;
-  int integer_part = normalized_value >> deslocament;
+  int integer_part = 0;
+
+  if (exponent >= 0) // se  o expoente for < 0, a parte inteira é 0
+    integer_part = normalized_value >> deslocament;
 
   printf("Integer part: %d\n", integer_part);
 
   // TODO: parte fracionária - NAO ESTA CORRETO
-  // #################################################
-  int fraction_mask = (1 << deslocament) - 1;
-  int fraction_part = normalized_value & fraction_mask;
+  int fraction_mask =
+      (1 << (deslocament + 1)) - 1; // + 1 para retirara o 1 acrescentado e por
+                                    // fim menos 1 para transformar em zeros.
+  int fraction_part = (normalized_value & fraction_mask);
+  // ########################################################
+
+  printf("Fraction Mask: 0b");
+  for (int i = 23; i >= 0; i--) {
+    int bit = (fraction_mask >> i) & 1;
+    printf("%d", bit);
+  }
+  printf("\n");
+
+  printf("Fraction Part: 0b");
+  for (int i = 23; i >= 0; i--) {
+    int bit = (normalized_value >> i) & 1;
+    printf("%d", bit);
+  }
+  printf("\n");
   // float fraction_value = (float)fraction_part / (1 << deslocament);  //
   // OPERAÇÂO COM FLOATS NÂO PERMITIDA
   int fraction_value = fraction_part * NUM_DECIMAL_DIGITS;
@@ -68,7 +87,7 @@ size_t float_to_string(float value, char buffer[], size_t buffer_size) {
 
   // Escrever ponto decimal e parte fracionária no buffer
   index +=
-      snprintf(buffer + index, buffer_size - index, ".%06u", fraction_part);
+      snprintf(buffer + index, buffer_size - index, ".%06d", fraction_value);
 
   // Garantir que o buffer seja nulo-terminado
   buffer[index] = '\0';

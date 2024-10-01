@@ -49,18 +49,19 @@ size_t float_to_string(float value, char buffer[], size_t buffer_size) {
   printf("Integer part: %d\n", integer_part);
 
   // TODO: parte fracionária - NAO ESTA CORRETO
-  int fraction_mask =
-      (1 << (deslocament + 1)) - 1; // + 1 para retirara o 1 acrescentado e por
-                                    // fim menos 1 para transformar em zeros.
-  int fraction_part = (normalized_value & fraction_mask);
+  int fraction_mask = (1 << deslocament) - 1; // + 1 para retirara o 1 acrescentado e por
+                                    // fim menos 1 para transformar em zeros.f
+  int fraction_part_1 = normalized_value & fraction_mask;
+  long fraction_part = fraction_part_1 * (long)NUM_DECIMAL_DIGITS;
+
   // ########################################################
 
-  printf("Fraction Mask: 0b");
+  /*printf("Fraction Mask: 0b");
   for (int i = 23; i >= 0; i--) {
     int bit = (fraction_mask >> i) & 1;
     printf("%d", bit);
   }
-  printf("\n");
+  printf("\n");*/
 
   printf("Fraction Part: 0b");
   for (int i = 23; i >= 0; i--) {
@@ -70,7 +71,7 @@ size_t float_to_string(float value, char buffer[], size_t buffer_size) {
   printf("\n");
   // float fraction_value = (float)fraction_part / (1 << deslocament);  //
   // OPERAÇÂO COM FLOATS NÂO PERMITIDA
-  int fraction_value = fraction_part * NUM_DECIMAL_DIGITS;
+  int fraction_value = fraction_part >> deslocament;
 
   printf("Fraction value: %d\n", fraction_value);
 

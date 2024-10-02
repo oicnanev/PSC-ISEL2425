@@ -32,13 +32,6 @@ size_t float_to_string(float value, char buffer[], size_t buffer_size) {
   int normalized_value =
       (1 << 23) | float_bit_fields.mantissa; // adicionar o '1,' que falta
 
-  // DEBUG lines
-  // -----------------------------------------------------------------------------
-  printf("Signal: %d\n", signal);
-  printf("Exponent: %d\n", exponent);
-  printf("Normalized Value: %d\n", normalized_value);
-  // ------------------------------------------------------------------------------------------
-
   // parte inteira
   int deslocament = 23 - exponent;
   int integer_part = 0;
@@ -46,34 +39,25 @@ size_t float_to_string(float value, char buffer[], size_t buffer_size) {
   if (exponent >= 0) // se  o expoente for < 0, a parte inteira é 0
     integer_part = normalized_value >> deslocament;
 
-  printf("Integer part: %d\n", integer_part);
+  int fraction_mask =
+      (1 << deslocament) - 1; // menos 1 para transformar em zeros
+  long fraction_part = normalized_value & fraction_mask;
+  fraction_part = fraction_part * (long)NUM_DECIMAL_DIGITS;
 
-  // TODO: parte fracionária - NAO ESTA CORRETO
-  int fraction_mask = (1 << deslocament) - 1; // + 1 para retirara o 1 acrescentado e por
-                                    // fim menos 1 para transformar em zeros.f
-  int fraction_part_1 = normalized_value & fraction_mask;
-  long fraction_part = fraction_part_1 * (long)NUM_DECIMAL_DIGITS;
-
-  // ########################################################
-
-  /*printf("Fraction Mask: 0b");
-  for (int i = 23; i >= 0; i--) {
-    int bit = (fraction_mask >> i) & 1;
-    printf("%d", bit);
-  }
-  printf("\n");*/
-
-  printf("Fraction Part: 0b");
-  for (int i = 23; i >= 0; i--) {
-    int bit = (normalized_value >> i) & 1;
-    printf("%d", bit);
-  }
-  printf("\n");
-  // float fraction_value = (float)fraction_part / (1 << deslocament);  //
-  // OPERAÇÂO COM FLOATS NÂO PERMITIDA
+  // deslocar para a direita para ficar com 6 casas decimais
   int fraction_value = fraction_part >> deslocament;
 
+  // DEBUG LINES
+  // ####################################################################
+  printf("Signal: %d\n", signal);
+  printf("Exponent: %d\n", exponent);
+  printf("Normalized Value: %d\n", normalized_value);
+  printf("Deslocament: %d\n", deslocament);
+  printf("Integer part: %d\n", integer_part);
+  printf("Fraction mask: %d\n", fraction_mask);
+  printf("Fraction part: %ld\n", fraction_part);
   printf("Fraction value: %d\n", fraction_value);
+  // ################################################################################
 
   // escrever sinal no buffer e noramalizar parte inteira se for negativo
   if (signal) {

@@ -144,9 +144,11 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    // Print the initial information
     printf("Input filename = %s\n", filename);
-    printf("Output filename = %s\n", output_filename);
+    printf("Output filename = %s\n", output_filename ? output_filename : "(null)");
     printf("Alinhamento = %s\n\n", alignment == 'l' ? "esquerda" : "direita");
+
 
     print_csv(input, output, alignment);
 

@@ -8,7 +8,7 @@
 
 void print_usage() {
   printf("Usage: ./csv_show [options] <column> <pattern>\n");
-  printf("-o <file>\t\t\tNome do ficheiros de saída\n");
+  printf("-o <file>\tNome do ficheiros de saída\n");
   printf("-a <alignment>\tAlinhamento: -al : esquerda. -ar : direita\n");;
 }
 

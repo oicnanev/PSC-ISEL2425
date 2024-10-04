@@ -6,12 +6,21 @@
   1000000 // para multiplicar e obter 6 digitos de precisão na parte fracionaria
 
 size_t float_to_string(float value, char buffer[], size_t buffer_size) {
-  size_t index = 0;
+  // Check for zero value
+    if (value == 0.0f) {
+        if (buffer_size < 8) // "-0.000000" precisa de 8 characters
+            return 0;
+        snprintf(buffer, buffer_size, "0.000000");
+        return 8;
+    }
 
-  // Se valor for zero retornar já 10 (sinal + 0 + ponto + 6 digitos de precisão
-  // + '\0')
-  if (value == 0)
-    return 10;
+  // Ver se o buffer_size é suficiente pelo menos as 6 casas decimais
+  if (buffer_size < 9 && value > 0)
+    return 0;
+  else if (buffer_size < 10 && value < 0)
+    return 0;
+
+  size_t index = 0;
 
   // criação de uma união constituida por uma extrutura de 'bit fields' e um
   // float
@@ -49,23 +58,19 @@ size_t float_to_string(float value, char buffer[], size_t buffer_size) {
 
   // DEBUG LINES
   // ####################################################################
-  printf("Signal: %d\n", signal);
+  /*printf("Signal: %d\n", signal);
   printf("Exponent: %d\n", exponent);
   printf("Normalized Value: %d\n", normalized_value);
   printf("Deslocament: %d\n", deslocament);
   printf("Integer part: %d\n", integer_part);
   printf("Fraction mask: %d\n", fraction_mask);
   printf("Fraction part: %ld\n", fraction_part);
-  printf("Fraction value: %d\n", fraction_value);
+  printf("Fraction value: %d\n", fraction_value);*/
   // ################################################################################
 
   // escrever sinal no buffer e noramalizar parte inteira se for negativo
-  if (signal) {
+  if (signal)
     buffer[index++] = '-';
-    integer_part *= -1;
-  } else {
-    buffer[index++] = '+';
-  }
 
   // Escrever parte inteira no buffer
   index += snprintf(buffer + index, buffer_size - index, "%d", integer_part);
@@ -75,27 +80,7 @@ size_t float_to_string(float value, char buffer[], size_t buffer_size) {
       snprintf(buffer + index, buffer_size - index, ".%06d", fraction_value);
 
   // Garantir que o buffer seja nulo-terminado
-  buffer[index] = '\0';
+  //buffer[index] = '\0';
 
   return index;
-}
-
-int main() {
-  float num = -123.123459;
-  char buffer[BUFFER_SIZE];
-  printf("The number %f is stored in %ld characters\n\n", num,
-         float_to_string(num, buffer, sizeof(buffer)));
-
-  num = 0.001;
-  printf("The number %f is stored in %ld characters\n\n", num,
-         float_to_string(num, buffer, sizeof(buffer)));
-
-  num = 1.1;
-  printf("The number %f is stored in %ld characters\n\n", num,
-         float_to_string(num, buffer, sizeof(buffer)));
-
-  num = 123.123456789;
-  printf("The number %f is stored in %ld characters\n\n", num,
-         float_to_string(num, buffer, sizeof(buffer)));
-  return 0;
 }

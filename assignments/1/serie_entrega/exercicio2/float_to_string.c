@@ -1,3 +1,29 @@
+/*
+ * Função: float_to_string
+ * -----------------------
+ * Converte um valor de ponto flutuante para uma string com precisão de 6 casas decimais
+ * e armazena o resultado no buffer fornecido.
+ *
+ * Parâmetros:
+ *  - float value: o valor de ponto flutuante a ser convertido.
+ *  - char buffer[]: o array de caracteres onde a string resultante será armazenada.
+ *  - size_t buffer_size: o tamanho do array buffer.
+ *
+ * Retorna:
+ *  - size_t: o comprimento da string produzida. Retorna 0 se o buffer for insuficiente.
+ *
+ * Método:
+ * 1. Verifica se o valor é zero e armazena "0.000000" no buffer se for o caso.
+ * 2. Verifica se o buffer fornecido é suficiente para armazenar a string resultante.
+ * 3. Utiliza uma união para acessar os campos de bits do valor de ponto flutuante.
+ * 4. Calcula a parte inteira e a parte fracionária do valor.
+ * 5. Escreve o sinal, a parte inteira e a parte fracionária no buffer.
+ * 6. Adiciona o caractere nulo ('\0') ao final da string no buffer.
+ *
+ * Autor:
+ * 45824 Nuno Venâncio
+ */
+
 #include <stdio.h>
 
 #define BUFFER_SIZE 14

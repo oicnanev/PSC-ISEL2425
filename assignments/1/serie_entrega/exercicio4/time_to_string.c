@@ -1,3 +1,40 @@
+/*
+ * Função: time_to_string
+ * ----------------------
+ * Converte uma estrutura de tempo (struct tm) para uma string formatada e 
+ * armazena o resultado no buffer fornecido.
+ *
+ * Parâmetros:
+ *  - struct tm *tm: ponteiro para a estrutura de tempo a ser convertida.
+ *  - char *buffer: o array de caracteres onde a string resultante será armazenada.
+ *  - size_t buffer_size: o tamanho do array buffer.
+ *
+ * Retorna:
+ *  - size_t: o comprimento da string produzida. Retorna 0 se o buffer for insuficiente.
+ *
+ * Método:
+ * 1. Calcula o tamanho necessário do buffer para armazenar a string formatada.
+ * 2. Verifica se o buffer fornecido é suficiente para armazenar a string resultante.
+ * 3. Escreve o dia da semana no buffer.
+ * 4. Adiciona a vírgula e o espaço.
+ * 5. Escreve o dia do mês no buffer.
+ * 6. Adiciona o hífen.
+ * 7. Escreve o mês no buffer.
+ * 8. Adiciona o hífen.
+ * 9. Escreve o ano no buffer.
+ * 10. Adiciona a vírgula e o espaço.
+ * 11. Escreve a hora no buffer.
+ * 12. Adiciona os dois pontos.
+ * 13. Escreve os minutos no buffer.
+ * 14. Adiciona os dois pontos.
+ * 15. Escreve os segundos no buffer.
+ * 16. Adiciona o caractere nulo ('\0') ao final da string no buffer.
+ *
+ * Autor:
+ * 45824 Nuno Venâncio
+ */
+
+
 #include <stdio.h>
 #include <string.h>
 

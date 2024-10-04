@@ -1,3 +1,28 @@
+/*
+ * Função: mini_snprintf
+ * ---------------------
+ * Formata e armazena uma string no buffer fornecido, de acordo com o formato especificado.
+ *
+ * Parâmetros:
+ *  - char *buffer: o array de caracteres onde a string resultante será armazenada.
+ *  - size_t buffer_size: o tamanho do array buffer.
+ *  - const char *format: a string de formato que especifica como os argumentos devem ser formatados.
+ *  - ...: uma lista de argumentos variáveis que serão formatados de acordo com a string de formato.
+ *
+ * Retorna:
+ *  - size_t: o comprimento da string produzida. Retorna 0 se o buffer for insuficiente.
+ *
+ * Método:
+ * 1. Inicializa a lista de argumentos variáveis.
+ * 2. Percorre a string de formato e processa cada especificador de formato (%d, %s, %b, %c, %x, %e, %f).
+ * 3. Converte e armazena os valores correspondentes no buffer, respeitando o tamanho máximo do buffer.
+ * 4. Adiciona o caractere nulo ('\0') ao final da string no buffer.
+ * 5. Finaliza a lista de argumentos variáveis.
+ *
+ * Autor:
+ * 45824 Nuno Venâncio
+ */
+
 #include <stdarg.h>
 #include <stdio.h>
 

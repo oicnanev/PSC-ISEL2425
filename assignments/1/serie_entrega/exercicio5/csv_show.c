@@ -1,3 +1,103 @@
+/*
+ * Função: print_usage
+ * -------------------
+ * Exibe a mensagem de uso do programa, incluindo as opções disponíveis e os
+ * parâmetros esperados.
+ *
+ * Parâmetros:
+ *  - Nenhum.
+ *
+ * Retorna:
+ *  - void: Esta função não retorna valores.
+ *
+ * Método:
+ * 1. Usa a função printf para exibir a mensagem de uso com as opções e
+ * parâmetros.
+ *
+ * ****************************************************************************
+ * Função: calculate_max_widths
+ * ----------------------------
+ * Calcula a largura máxima de cada coluna em um arquivo CSV.
+ *
+ * Parâmetros:
+ *  - FILE *input: o arquivo CSV de entrada.
+ *  - int *max_widths: array onde as larguras máximas de cada coluna serão
+ * armazenadas.
+ *  - int num_fields: número de colunas no CSV.
+ *
+ * Retorna:
+ *  - void: Esta função não retorna valores.
+ *
+ * Método:
+ * 1. Lê cada linha do arquivo CSV.
+ * 2. Divide a linha em campos usando strtok.
+ * 3. Calcula o comprimento de cada campo e atualiza max_widths se o comprimento
+ * for maior que o valor atual.
+ * 4. Reposiciona o ponteiro do arquivo para o início.
+ *
+ * ****************************************************************************
+ * Função: print_border
+ * --------------------
+ * Imprime uma borda para a tabela CSV com base nas larguras máximas das colunas.
+ *
+ * Parâmetros:
+ *  - FILE *output: o arquivo de saída onde a borda será impressa.
+ *  - int *max_widths: array com as larguras máximas de cada coluna.
+ *  - int num_fields: número de colunas no CSV.
+ *
+ * Retorna:
+ *  - void: Esta função não retorna valores.
+ *
+ * Método:
+ * 1. Itera sobre cada coluna e imprime uma borda com base na largura máxima da
+ * coluna.
+ * 2. Adiciona um caractere '+' entre as colunas.
+ *
+ * ****************************************************************************
+ * Função: print_csv
+ * -----------------
+ * Imprime o conteúdo de um arquivo CSV formatado com alinhamento especificado.
+ *
+ * Parâmetros:
+ *  - FILE *input: o arquivo CSV de entrada.
+ *  - FILE *output: o arquivo de saída onde o CSV formatado será impresso.
+ *  - char alignment: o alinhamento dos campos ('l' para esquerda, 'r' para
+ * direita).
+ *
+ * Retorna:
+ *  - void: Esta função não retorna valores.
+ *
+ * Método:
+ * 1. Lê a primeira linha do arquivo CSV para determinar o número de colunas.
+ * 2. Calcula a largura máxima de cada coluna.
+ * 3. Imprime a borda superior da tabela.
+ * 4. Lê cada linha do arquivo CSV e imprime os campos formatados com o
+ * alinhamento especificado.
+ * 5. Imprime uma borda entre as linhas.
+ *
+ * ****************************************************************************
+ * Função: main
+ * ------------
+ * Função principal que processa os argumentos da linha de comando e chama as
+ * funções apropriadas para imprimir o CSV formatado.
+ *
+ * Parâmetros:
+ *  - int argc: número de argumentos da linha de comando.
+ *  - char *argv[]: array de strings contendo os argumentos da linha de comando.
+ *
+ * Retorna:
+ *  - int: código de saída do programa (0 para sucesso, 1 para erro).
+ *
+ * Método:
+ * 1. Processa os argumentos da linha de comando para obter o nome do arquivo de
+ * entrada, o nome do arquivo de saída e o alinhamento.
+ * 2. Abre o arquivo CSV de entrada.
+ * 3. Abre o arquivo de saída, se especificado.
+ * 4. Chama a função print_csv para imprimir o CSV formatado.
+ * 5. Fecha os arquivos de entrada e saída.
+ */
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

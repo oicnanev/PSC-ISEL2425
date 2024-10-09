@@ -28,15 +28,46 @@
 
 #define BUFFER_SIZE 14
 #define SINGLE_PRECISION_VALUE 127
-#define NUM_DECIMAL_DIGITS                                                     \
-  1000000 // para multiplicar e obter 6 digitos de precisão na parte fracionaria
+#define NUM_DECIMAL_DIGITS 1000000 // para multiplicar e obter 6 digitos de precisão na parte fracionaria
+
+
+size_t decimal_int_to_string(unsigned value, char buffer[], size_t buffer_size){
+  const unsigned char BASE = 10;
+  char temp[BUFFER_SIZE];
+  size_t length = 0;
+  int i = 0;
+
+  // Conversão do valor para string
+  do {
+    int remainder = value % BASE;
+    temp[i++] = remainder + '0';
+    value /= BASE;
+  } while (value > 0);
+
+  // copia a string reversa para o buffer final
+  while (i > 0) {
+    buffer[length++] = temp[--i];
+  }
+
+  return length;
+}
+
 
 size_t float_to_string(float value, char buffer[], size_t buffer_size) {
-  // Check for zero value
+    // Ver se é zero
     if (value == 0.0f) {
         if (buffer_size < 8) // "-0.000000" precisa de 8 characters
             return 0;
-        snprintf(buffer, buffer_size, "0.000000");
+
+        buffer[0] = '0';
+        buffer[1] = '.';
+        buffer[2] = '0';
+        buffer[3] = '0';
+        buffer[4] = '0';
+        buffer[5] = '0';
+        buffer[6] = '0';
+        buffer[7] = '0';
+        buffer[8] = '\0';
         return 8;
     }
 
@@ -64,8 +95,7 @@ size_t float_to_string(float value, char buffer[], size_t buffer_size) {
 
   int signal = float_bit_fields.signal;
   int exponent = float_bit_fields.exponent - SINGLE_PRECISION_VALUE;
-  int normalized_value =
-      (1 << 23) | float_bit_fields.mantissa; // adicionar o '1,' que falta
+  int normalized_value = (1 << 23) | float_bit_fields.mantissa; // adicionar o '1,' que falta
 
   // parte inteira
   int deslocament = 23 - exponent;
@@ -74,39 +104,54 @@ size_t float_to_string(float value, char buffer[], size_t buffer_size) {
   if (exponent >= 0) // se  o expoente for < 0, a parte inteira é 0
     integer_part = normalized_value >> deslocament;
 
-  int fraction_mask =
-      (1 << deslocament) - 1; // menos 1 para transformar em zeros
+  int fraction_mask = (1 << deslocament) - 1; // menos 1 para transformar em zeros
   long fraction_part = normalized_value & fraction_mask;
   fraction_part = fraction_part * (long)NUM_DECIMAL_DIGITS;
 
   // deslocar para a direita para ficar com 6 casas decimais
   int fraction_value = fraction_part >> deslocament;
 
-  // DEBUG LINES
-  // ####################################################################
-  /*printf("Signal: %d\n", signal);
-  printf("Exponent: %d\n", exponent);
-  printf("Normalized Value: %d\n", normalized_value);
-  printf("Deslocament: %d\n", deslocament);
-  printf("Integer part: %d\n", integer_part);
-  printf("Fraction mask: %d\n", fraction_mask);
-  printf("Fraction part: %ld\n", fraction_part);
-  printf("Fraction value: %d\n", fraction_value);*/
-  // ################################################################################
-
   // escrever sinal no buffer e noramalizar parte inteira se for negativo
   if (signal)
-    buffer[index++] = '-';
+      buffer[index++] = '-';
 
   // Escrever parte inteira no buffer
-  index += snprintf(buffer + index, buffer_size - index, "%d", integer_part);
+  index += decimal_int_to_string(integer_part, buffer + index, buffer_size - index);
 
-  // Escrever ponto decimal e parte fracionária no buffer
-  index +=
-      snprintf(buffer + index, buffer_size - index, ".%06d", fraction_value);
+  // Escrever o ponto decimal
+  buffer[index++] = '.';
+
+  // Escrever a parte fracionária no buffer
+  if (fraction_value < 1) { // preciso colocar 6 zeros antes
+      for (int i = 6; i > 0; i--) {
+          buffer[index++] = '0';
+      }
+      buffer[index] = '\0';
+      return index;
+  } else if (fraction_value < 10) { // colocar 5 zeros antes
+      for (int i = 5; i > 0; i--) {
+          buffer[index++] = '0';
+      }
+  } else if (fraction_value < 100) { // colocar 4 zeros antes
+      for (int i = 4; i > 0; i--) {
+          buffer[index++] = '0';
+      }
+  } else if (fraction_value < 1000) { // colocar 3 zeros antes
+      for (int i = 3; i > 0; i--) {
+          buffer[index++] = '0';
+      }
+  } else if (fraction_value < 10000) { // colocar 2 zeros antes
+      for (int i = 2; i > 0; i--) {
+          buffer[index++] = '0';
+      }
+  } else if (fraction_value < 100000) { // colocar 1 zero antes
+      buffer[index++] = '0';
+  } 
+      
+  index += decimal_int_to_string(fraction_value, buffer + index, buffer_size - index);
 
   // Garantir que o buffer seja nulo-terminado
-  //buffer[index] = '\0';
+  buffer[index] = '\0';
 
   return index;
 }

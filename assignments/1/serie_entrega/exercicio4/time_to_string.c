@@ -54,77 +54,77 @@ size_t time_to_string(struct tm *tm, char *buffer, size_t buffer_size) {
     const char *week_day[] = {"domingo", "segunda-feira", "terça-feira", "quarta-feira",
                               "quinta-feira", "sexta-feira", "sábado"};
 
-    // Calculate the required buffer size
+    // Calcular o buffer size necessario
     size_t required_size = 0;
-    required_size += strlen(week_day[tm->tm_wday]) + 2; // Day of the week + comma + space
-    required_size += 2 + 1; // Day of the month (2 digits) + dash
-    required_size += 2 + 1; // Month (2 digits) + dash
-    required_size += 4 + 2; // Year (4 digits) + comma and space
-    required_size += 2 + 1; // Hour (2 digits) + colon
-    required_size += 2 + 1; // Minute (2 digits) + colon
-    required_size += 2 + 1; // Second (2 digits) + null terminator
+    required_size += strlen(week_day[tm->tm_wday]) + 2; // dia da semana + virgula + espaço
+    required_size += 2 + 1; // Dia do mês (2 digitos) + traço
+    required_size += 2 + 1; // Mês (2 digitos) + traço
+    required_size += 4 + 2; // Ano (4 digitos) + virgula + espaço
+    required_size += 2 + 1; // Hora (2 digitos) + dois pontos
+    required_size += 2 + 1; // Minutos (2 digitos) + dois pontos
+    required_size += 2 + 1; // Segundos (2 digitos) + null terminator
 
     size_t index = 0;
 
-    // Check if the buffer is sufficient
+    // Ver se o buffer é sufficiente
     if (buffer_size < required_size) {
         return index;
     }
 
-    // Write the day of the week
+    // Escrever dia da semana
     const char *day = week_day[tm->tm_wday];
     while (*day && index < buffer_size - 1) {
         buffer[index++] = *day++;
     }
 
-    // Write the comma and space
+    // Escrever virgula e espaço
     if (index < buffer_size - 1) buffer[index++] = ',';
     if (index < buffer_size - 1) buffer[index++] = ' ';
 
-    // Write the day of the month
+    // Escrever dia do mês
     if (index < buffer_size - 1) buffer[index++] = (tm->tm_mday / 10) + '0';
     if (index < buffer_size - 1) buffer[index++] = (tm->tm_mday % 10) + '0';
 
-    // Write the dash
+    // Escrever o '-'
     if (index < buffer_size - 1) buffer[index++] = '-';
 
-    // Write the month
+    // Escrever o mês
     if (index < buffer_size - 1) buffer[index++] = ((tm->tm_mon + 1) / 10) + '0';
     if (index < buffer_size - 1) buffer[index++] = ((tm->tm_mon + 1) % 10) + '0';
 
-    // Write the dash
+    // Escrever '-'
     if (index < buffer_size - 1) buffer[index++] = '-';
 
-    // Write the year
+    // Escrever o ano
     int year = tm->tm_year + 1900;
     if (index < buffer_size - 1) buffer[index++] = (year / 1000) + '0';
     if (index < buffer_size - 1) buffer[index++] = ((year / 100) % 10) + '0';
     if (index < buffer_size - 1) buffer[index++] = ((year / 10) % 10) + '0';
     if (index < buffer_size - 1) buffer[index++] = (year % 10) + '0';
 
-    // Write the comma and space
+    // Escrever virgula e espaço
     if (index < buffer_size - 1) buffer[index++] = ',';
     if (index < buffer_size - 1) buffer[index++] = ' ';
 
-    // Write the hour
+    // Escrever hora
     if (index < buffer_size - 1) buffer[index++] = (tm->tm_hour / 10) + '0';
     if (index < buffer_size - 1) buffer[index++] = (tm->tm_hour % 10) + '0';
 
-    // Write the colon
+    // Escrever dois pontos
     if (index < buffer_size - 1) buffer[index++] = ':';
 
-    // Write the minute
+    // Escrever o minuto
     if (index < buffer_size - 1) buffer[index++] = (tm->tm_min / 10) + '0';
     if (index < buffer_size - 1) buffer[index++] = (tm->tm_min % 10) + '0';
 
-    // Write the colon
+    // Escrever os dois pontos
     if (index < buffer_size - 1) buffer[index++] = ':';
 
-    // Write the second
+    // Escrever os segundos
     if (index < buffer_size - 1) buffer[index++] = (tm->tm_sec / 10) + '0';
     if (index < buffer_size - 1) buffer[index++] = (tm->tm_sec % 10) + '0';
 
-    // Null-terminate the buffer
+    // Terminar com o caracter terminador '\0'
     if (index < buffer_size) buffer[index] = '\0';
 
     return index;

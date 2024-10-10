@@ -141,7 +141,7 @@ void print_csv(FILE *input, FILE *output, char alignment) {
     char line[MAX_LINE_LENGTH];
     int num_fields = 0;
 
-    // Read the first line to determine the number of fields
+    // Ler a primeira linha para determinar o número de campos (células)
     if (fgets(line, sizeof(line), input)) {
         char *token = strtok(line, ",");
         while (token) {
@@ -150,7 +150,7 @@ void print_csv(FILE *input, FILE *output, char alignment) {
         }
     }
 
-    // Calculate the maximum width for each column
+    // Calcular o  tamanho maximo para cada coluna
     int max_widths[num_fields];
     memset(max_widths, 0, sizeof(max_widths));
     calculate_max_widths(input, max_widths, num_fields);
@@ -161,7 +161,7 @@ void print_csv(FILE *input, FILE *output, char alignment) {
     // Print the CSV content
     rewind(input);
     while (fgets(line, sizeof(line), input)) {
-        // Remove the newline character from the line
+        // Remove o caractere newline da linha
         line[strcspn(line, "\n")] = '\0';
 
         char *token = strtok(line, ",");
@@ -188,7 +188,7 @@ void print_csv(FILE *input, FILE *output, char alignment) {
         }
         fputs("|\n", output);
 
-        // Print the border between rows
+        // Print o limite entre linhas
         print_border(output, max_widths, num_fields);
     }
 }
@@ -244,7 +244,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // Print the initial information
+    // Informação inicial
     printf("Input filename = %s\n", filename);
     printf("Output filename = %s\n", output_filename ? output_filename : "(null)");
     printf("Alinhamento = %s\n\n", alignment == 'l' ? "esquerda" : "direita");

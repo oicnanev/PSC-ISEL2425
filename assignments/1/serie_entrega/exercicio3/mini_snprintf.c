@@ -35,13 +35,13 @@ size_t int_to_string(int value, char *buffer, size_t buffer_size, int index) {
     if (value == 0) {
         temp[temp_index++] = '0';
     } else {
-        if (value < 0) {
+        if (value < 0) {  // Por sinal e número positivo
             if (index < buffer_size - 1) {
                 buffer[index++] = '-';
             }
             value = -value;
         }
-        while (value > 0) {
+        while (value > 0) {  // ir buscar um número de cada vez e somar-lhe o char '0'
             temp[temp_index++] = (value % 10) + '0';
             value /= 10;
         }
@@ -85,16 +85,23 @@ size_t hex_int_to_string(int value, char *buffer, size_t buffer_size, int index)
 size_t float_to_string(float value, char *buffer, size_t buffer_size, int index) {
     // Ver se é zero
     if (value == 0.0f) {
-        if (buffer_size < 4)
+        if (buffer_size < 8)
             return 0;
 
+        // como os testes, testam por 6 casas decimais, depois do ponto, 6 zeros
         buffer[index++] = '0';
         buffer[index++] = '.';
+        buffer[index++] = '0';
+        buffer[index++] = '0';
+        buffer[index++] = '0';
+        buffer[index++] = '0';
+        buffer[index++] = '0';
         buffer[index++] = '0';
 
         return index; 
     }
 
+    // Conversão do float para bits
     typedef union {
         struct {
             unsigned int mantissa : 23;
@@ -162,8 +169,18 @@ size_t float_to_string(float value, char *buffer, size_t buffer_size, int index)
         buffer[index++] = '0';
     }
     
-    index += int_to_string(fraction_value, buffer + index, buffer_size - index, index);
-    
+    //index += int_to_string(fraction_value, buffer + index, buffer_size - index, index);
+    char temp[6];  //para 6 casas decimais
+    int temp_index = 0;
+    while (fraction_value > 0) {  // ir buscar um número de cada vez e somar-lhe o char '0'
+        temp[temp_index++] = (fraction_value % 10) + '0';
+        fraction_value /= 10;
+    }
+    for (int i = temp_index - 1; i >= 0; i--) {
+        if (index < buffer_size - 1) {
+            buffer[index++] = temp[i];
+        }
+    }
     return index;
 }
 
@@ -201,7 +218,7 @@ size_t mini_snprintf(char *buffer, size_t buffer_size, const char *format, ...) 
             } else if (*format == 'f') {
                 float value = (float)va_arg(args, double);
                 if (index < buffer_size - 1) {
-                    index += float_to_string(value, buffer, buffer_size, index);
+                    index += float_to_string(value, buffer + index, buffer_size - index, index);
                 }
             }
         } else {

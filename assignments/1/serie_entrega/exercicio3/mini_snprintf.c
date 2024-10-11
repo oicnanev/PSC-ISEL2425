@@ -137,7 +137,7 @@ size_t float_to_string(float value, char *buffer, size_t buffer_size, int index)
         buffer[index++] = '-';
 
     // Escrever parte inteira no buffer
-    index += int_to_string(integer_part, buffer + index, buffer_size - index, index);
+    index += int_to_string(integer_part, buffer, buffer_size - index, index);
 
     // Escrever o ponto decimal
     buffer[index++] = '.';
@@ -169,7 +169,7 @@ size_t float_to_string(float value, char *buffer, size_t buffer_size, int index)
         buffer[index++] = '0';
     }
     
-    //index += int_to_string(fraction_value, buffer + index, buffer_size - index, index);
+    //index += int_to_string(fraction_value, buffer, buffer_size - index, index);
     char temp[6];  //para 6 casas decimais
     int temp_index = 0;
     while (fraction_value > 0) {  // ir buscar um número de cada vez e somar-lhe o char '0'
@@ -194,7 +194,7 @@ size_t mini_snprintf(char *buffer, size_t buffer_size, const char *format, ...) 
             format++;
             if (*format == 'd') {
                 int value = va_arg(args, int);
-                index = int_to_string(value, buffer, buffer_size, index);
+                index = int_to_string(value, buffer, buffer_size - index, index);
             } else if (*format == 's') {
                 const char *value = va_arg(args, const char *);
                 while (*value != '\0' && index < buffer_size - 1) {
@@ -214,11 +214,11 @@ size_t mini_snprintf(char *buffer, size_t buffer_size, const char *format, ...) 
                 }
             } else if (*format == 'x') {
                 int value = va_arg(args, int);
-                index = hex_int_to_string(value, buffer, buffer_size, index);
+                index = hex_int_to_string(value, buffer, buffer_size - index, index);
             } else if (*format == 'f') {
                 float value = (float)va_arg(args, double);
                 if (index < buffer_size - 1) {
-                    index += float_to_string(value, buffer + index, buffer_size - index, index);
+                    index += float_to_string(value, buffer, buffer_size - index, index);
                 }
             }
         } else {

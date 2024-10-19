@@ -1,5 +1,5 @@
-.section text
-.global rotate_right
+    .section text
+    .global rotate_right
 
 rotate_right:
     # Paràmetros:
@@ -23,4 +23,7 @@ rotate_right:
     movq %rdx, 8(%r8)             # guarda a parte alta no endereço apontado por r8 + 8
 
     ret
+
+    # this section eliminates liking warnings
+    .section .note.GNU-stack,"",@progbits
 

@@ -1,16 +1,8 @@
-.global my_memcmp
+    .section .text
+
+    .global my_memcmp
 
 my_memcmp:
-    push %rbp
-    movq %rsp, %rbp
-    movq %rdi, -8(%rbp)           # ptr1
-    movq %rsi, -16(%rbp)          # ptr2
-    movq %rdx, -24(%rbp)          # num
-
-    movq -8(%rbp), %rdi           # carrega o ptr1 em rdi
-    movq -16(%rbp), %rsi          # carrega o ptr2 em rsi
-    movq -24(%rbp), %rcx          # carrega num em rcx
-
     xor  %rax, %rax               # zerar rax para comparação
 
 compare_loop:
@@ -30,7 +22,8 @@ not_equal:
     sub %bl, %al                  # calcula a difrença
 
 end:
-    leave
     ret
 
+    # this section eliminates liking warnings  
+    .section .note.GNU-stack,"",@progbits
 

@@ -167,7 +167,7 @@ Uma variável do tipo ponteiro para *void* pode receber ponteiros de qualquer ti
 
 - **char *a[] = {"luis", "rui", "ana"};** - **a** é um *array* cujos elementos são ponteiros para *array* de caracteres
 
-# Struct
+### Struct
 
 O tipo **struct** agrega variáveis de tipos diferentes
 
@@ -194,4 +194,183 @@ struct pessoa utente;
 typedef struct pessoa Pessoa;
 
 Pessoa eu;
+```
+
+- Acesso a membro (<nome da struct>.<membro>):
+
+```c
+eu.idade;
+```
+
+- As *structs* podem-se copiar com o endereço afetação:
+
+```c
+Pessoa a, b;
+a = b;
+```
+
+- A passagem de *struct* como argumento de função é feita por valor
+
+```c
+int imc(struct pessoa p) {
+	return p.peso / (p.altura * p.altura)
+}
+```
+
+- Retorno da *struct* como valor de uma função
+
+```c
+struct pessoa pessoa_nova(char n[], int i, int p, int a){
+	struct pessoa temp;
+	strcpy(temp.nome, n);
+	temp.idade = i;
+	temp.peso = p;
+	temp.altura = a;
+	return temp;
+}
+```
+
+- Inicialização na definição
+
+```c
+struct pessoa pessoa1 = {"António", 53, 80, 1.76};
+struct pessoa pessoa2 = {
+	.nome = "José",
+	.altura = 1.76,
+	.peso = 80,
+	.idade = 23
+};
+```
+
+### Ponteiros e *structs*
+
+Se for necessário passar uma estrutura muito grande para uma função, deve-se considerar a passagem por ponteiro
+
+```c
+int imc(struct pessoa *p){
+	return (*p).peso / ((*p).altura * (*p).altura);
+}
+```
+
+A linguagem C dispõe de um operador alternativo para aceder ao membro de uma *struct* baseado em ponteir: ```->```
+
+```c
+return p->peso / (p->altura * p->altura);
+```
+
+Os operadores ```.``` e ```->``` em conjunto com ```()``` e ```[]``` são os mais prioritários:
+
+```c
+struct pessoa{
+	char nome[100];
+	int idade;
+	int peso;
+	int altura;
+} *p;
+```
+
+- ```++p->idade``` - incrementa o membro **idade**
+- ```(p++)->idade``` - incrementa **p** depois de aceder a **idade**. Só faz sentido num *array* de pessoas
+- ```*p->nome``` - dá acesso ao primeiro caracter de **nome**
+- ```p++->nome``` - incrementa **p** depois de aceder ao primeiro caracter de **nome**
+- ```(*p->nome)++``` - incrementa o código do primeiro caracter de **nome**
+
+### Alojamento de *struct* em memória
+
+Considerando a seguinte defenição da variável **x**:
+
+```c
+struct y {
+	char a;
+	int b;
+	short c;
+} x;
+```
+
+- Os membros de uma *struct* são dispostos em memória seguindo as regras de alinhamento do tipo a que pertencem, mesmo que para isso seja necessário inutilizar posições de memória entre campos consecutivos
+- O endereço de início da *struct* é alinhado no maior alinhamento necessário a um dos seus campos.
+- A dimensão de uma *struct* é múltipla do seu alinhamento
+
+Num processador a 32 ou 64 bits, com o compilador GNU, para alinha o campo **b**, é necessário avançar três posições de memória. A dimensão total desta *struct* é de 12 bytes.
+
+![Alinhamento da struct x](./img/align_struct.png)
+
+### Structs com campos baseados em bits
+
+Justificação:
+
+- casos em que se pretende reduzir a memória ocupada;
+- acesso a bits de forma simplificada.
+
+**Exemplo 1:**
+
+```c
+struct date {
+	short day: 5;
+	short month: 4;
+	short year: 7;
+};
+
+struct date date_pack(int year, int month, int day){
+	struct date tmp = {year - 2000, month, day};
+	return tmp;
+}
+
+sizeoff(struct date); // 2, o mesmo que sizeoff(short)
+```
+
+**Exemplo 2:**
+
+Acesso a registo de periférico mapeado no espaço de memória
+
+```c
+struct register_status{
+	char counter_enable: 1;
+	char counter_reset: 1;
+};
+
+struct register_status *status = 0xE0008004;
+
+status->counter_enable = 1;
+```
+
+Como a unidade mínima de acesso à memória é a palavra de memória - **byte**, para afetar um número de bits inferior é necessário ler, alterar os bits desejados e voltar a escrever. Resultado em dois acessos à memória, um de leitura e um de escrita.
+
+Apesar de aparente vantagemem relação à utilizaçãoo de operadores lógicos bit-a-bit, nem sempre é conveniente a sua utilização:
+
+1. Se, no acesso a um registo de periférico, este for só de escrita a operação de leitura é inútil
+2. Se a operação de leitura sobre um registo de periférico provocar a alteração de estado do periférico, ela é certamente indesejada.
+
+## Union
+
+Uma **union** é uma variável que pode armazenar, em tempos diferentes, valores de diferentes tipos e tamanhos. Através de uma *union* é possível encarar um dado conteúdo de memória na perspectiva de diferentes tipos
+
+```c
+struct symbol{
+	char *name;
+	int flags;
+	union {
+		int value_int;
+		float value_float;
+		char *value_string;
+	}
+	
+}
+```
+
+## Avaliação de desempenho
+
+### Medida de tempo
+
+```c
+#include <time.h>
+
+unsigned int get_time(){
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOLITIC, &ts);
+	return ts-tv_sec * 1000 + (ts.tv_nsec / 1000000);
+}
+unsigned initial = get_time();
+
+unsigned elapsed = get_time() - initial;
 ```

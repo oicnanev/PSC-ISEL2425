@@ -24,6 +24,6 @@ not_equal:
 end:
     ret
 
-    # this section eliminates liking warnings  
+    # this section eliminates liking warnings
     .section .note.GNU-stack,"",@progbits
 

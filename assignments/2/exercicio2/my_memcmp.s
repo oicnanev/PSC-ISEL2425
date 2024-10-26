@@ -5,6 +5,14 @@
 my_memcmp:
     xor  %rax, %rax               # zerar rax para comparação
 
+    # TOOD: comparar 64 bits de cada vez. Se ouver diferença compara bit a bit
+comara_loop_quad:
+    movq (%rdi), %r8             # carregar a quadword do ptr1 em %r8
+    movq (%rsi), %r9             #carrega a quadword do ptr2 em %r9
+    jne  compare_loop_byte
+    add  %rdx, %rdi              # incrementar %rdi, por size_t num
+    add  %rdx, %rsi
+
 compare_loop:
     movb (%rdi), %al              # carrega byte do ptr1 em al
     movb (%rsi), %bl              # carrega byte do ptr2 em bl

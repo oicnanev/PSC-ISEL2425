@@ -1,9 +1,9 @@
-    .section .text
-
-    .global my_memcmp
-
+/*
+int my_memcmp(const void *ptr1, const void *ptr2, size_t num);
+*/
+	.globl my_memcmp
 my_memcmp:
-    xor  %rax, %rax               # zerar rax para comparação
+	xor  %rax, %rax               # zerar rax para comparação
 
     #TODO: verificar se o tamanho é maior que 0
     #TODO  verificar se o tamanho maior ou igual a 64
@@ -50,8 +50,6 @@ not_equal:
     sub  %r8b, %al                 # calcula a difrença
 
 end:
-    ret
+	ret
 
-    # this section eliminates liking warnings
-    .section .note.GNU-stack,"",@progbits
-
+	.section	.note.GNU-stack

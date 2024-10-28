@@ -1,10 +1,12 @@
-    .global rotate_right
+/*
+	void rotate_right(unsigned long value[], size_t n);
+*/
 
-    .text
-
+	.text
+	.global rotate_right
 rotate_right:
-    # Paràmetros:
-    # value - array de 2 elementos de 64 bits (128 no total) %rdi
+	# Paràmetros:
+    # value - array de 2 elementos de 64 bits (128 no total) %rdi (pointer)
     # n - número de posições a deslocar %rsi
 
     # Se n for 0, retornar
@@ -60,8 +62,7 @@ swap_values:
     movq (&rsi), %rdx             # parte baixa apontada por %rsi para %rdx
 
 end:
-    ret
+	ret
 
-    # this section eliminates liking warnings
-    .section .note.GNU-stack,"",@progbits
+	.section .note.GNU-stack
 

@@ -1,8 +1,22 @@
-    .section .text
-    .global get_val_ptr
+/*
+struct data { short flags:6; short length:10; short vals[]; };
 
+struct info { double ref; struct data **data; int valid; };
+
+short *get_val_ptr(struct info items[],
+                      size_t item_idx, size_t data_idx, size_t val_idx, short mask)
+{
+	return items[item_idx].valid
+		&& val_idx < items[item_idx].data[data_idx]->length
+		&& (items[item_idx].data[data_idx]->flags & mask)
+			? &items[item_idx].data[data_idx]->vals[val_idx]
+			: NULL;
+}
+*/
+	.text
+	.global	get_val_ptr
 get_val_ptr:
-    push %rbp
+	push %rbp
     mov %rsp, %rbp
     
     # Carregar os parâmetros
@@ -51,10 +65,7 @@ invalid:
     mov $0, %rax
 
 end:
-    leave
-    ret
+	leave
+	ret
 
-
-    .section .note.GNU-stack,"",@progbits
-
-
+	.section	.note.GNU-stack

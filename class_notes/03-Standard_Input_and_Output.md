@@ -253,3 +253,44 @@ size_t fread(void * ptr, size_t size, size_t nitems, FILE * stream);
 
 int fgetc(FILE *stream);
 ```
+
+- Recua de uma posição o indicador de posição do ficheiro e inscreve o valor do parâmetro `c` nessa posição
+- Útil na construção de interpretadores
+
+```c
+int ungetc(int c, FILE * stream);
+```
+
+### Erros
+
+- Em todas as funções é retornada a indicação sobre eventuais ocorrencias de erro. Essa indicaçõa, do tipo "sim ou não", é indicada na forma de um ponteiro ´NULL` ou de um valor negativo.
+- Essa informação pode ser obtida posteriormente com:
+
+```c
+int ferror(FILE * stream);
+```
+
+- ou, obtida uma indicação mais precisa através da variável `errno`
+- A função `perror` imprime em `stderr``uma mensagem relativa ao erro registado em `errno`.
+
+```c
+void perror(const char * str);
+```
+
+- Para eliminar a indicação de erro ocorrido em operação anterior:
+
+```c
+void clearerr(FILE * stream);
+```
+
+- Para sabermos se foi tentado aceder para além do final do ficheiro:
+
+```c
+int feof(FILE * stream);
+```
+
+- Para traduzir um código de erro para uma mensagem legível:
+
+```c
+char * strerror(int errnum);
+```

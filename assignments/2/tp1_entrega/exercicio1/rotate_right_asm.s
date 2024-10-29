@@ -6,6 +6,9 @@
 # - rdi: Ponteiro para o array de 2x64 bits (value)
 # - esi: Número de posições para deslocar (n)
 rotate_right:
+    test %esi, %esi
+    ret
+
     # Salva os registos de propósito geral
     push %rbx
     push %rcx

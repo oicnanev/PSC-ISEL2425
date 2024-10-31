@@ -45,11 +45,12 @@ int main() {
       break;
     }
     int result = received_result;
-    //		printf("Received result: %d\n", result);
+    //printf("Received result: %d\n", result);
     if ((result == 0 && tests[i].result != 0) ||
         (result < 0 && tests[i].result >= 0) ||
         (result > 0 && tests[i].result <= 0))
       printf("[%d] received result: %d expected result: %d\n", i, result,
              tests[i].result);
+    else printf("OK\n");
   }
 }

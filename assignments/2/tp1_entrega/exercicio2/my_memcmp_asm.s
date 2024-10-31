@@ -1,55 +1,90 @@
-/*
-int my_memcmp(const void *ptr1, const void *ptr2, size_t num);
-*/
-	.globl my_memcmp
+    .text
+    .global my_memcmp
+
+# Função my_memcmp
+# Parâmetros:
+# - rdi: Ponteiro para ptr1
+# - rsi: Ponteiro para ptr2
+# - rdx: Número de bytes para comparar (num)
 my_memcmp:
-	xor  %rax, %rax               # zerar rax para comparação
+    push %rbp
+    mov %rsp, %rbp
+    push %rdi
+    push %rsi
+    push %rcx
+    push %r8
 
-    #TODO: verificar se o tamanho é maior que 0
-    #TODO  verificar se o tamanho maior ou igual a 64
-    #TODO: verificar se os ponteiros são alinhados
-    #TODO: verificar se o tamanho é maior ou igual a 8
+    # Alinhar os ponteiros para múltiplos de 8
+    # Comparar byte a byte até que estejam alinhados
+.align_check:
+    mov %rdi, %r9
+    and $7, %r9
+    jz .aligned
 
-compare_loop_quad:
-    movq (%rdi), %r8             # carregar a quadword do ptr1 em %r8
-    movq (%rsi), %r9             # carrega a quadword do ptr2 em %r9
-    jne  compare_loop_byte
-    add  %rdx, %rdi              # incrementar %rdi, por size_t num
-    add  %rdx, %rsi              # incrementar %rsi, por size_t num
-    dec  %rcx                    # decrementar contador
-    #TODO: verificar se o contador é maior que 63
-    jnz  compare_loop_quad       # enquanto o contador não chegar a zero, repete o loop
-    jz   end                     # se igual, retorna zero
+    # Comparação byte a byte para alinhamento
+    cmp $0, %rdx
+    jle .end
 
-compare_loop_byte:
-    movb (%rdi), %al              # carrega byte do ptr1 em al
-    movb (%rsi), %bl              # carrega byte do ptr2 em bl
-    cmp  %bl, %al                 # compara al e bl
-    jne  not_equal                # se diferente salta para not_equal
-    inc  %rdi                     # incrementa ptr1
-    inc  %rsi                     # incrementa ptr2
-    dec  %rcx                     # decrementa contador
-    #TODO: verificar se o contador é maior que 7
-    jnz  compare_loop_byte        # enquanto o contador não chegar a zero, repete o loop
-    jmp  end
+    movzbl (%rdi), %r9d
+    movzbl (%rsi), %r8d
+    cmp %r9d, %r8d
+    jne .mismatch_byte
 
-compare_loop_bit:
-    movb %al, %r8b                # move al para r8b
-    movb %bl, %r9b                # move bl para r9b
-    and  $1, %r8b                 # and bit a bit
-    and  $1, %r9b                 # and bit a bit
-    cmp  %r9b, %r8b               # compara bit a bit
-    jne  not_equal                # se diferente salta para not_equal
-    shr  $1, %al                  # shift right al
-    shr  $1, %bl                  # shift right bl
-    dec  $rcx                     # decrementa contador
-    jnz  compare_loop_bit         # enquanto o contador não chegar a zero, repete o loop
+    add $1, %rdi
+    add $1, %rsi
+    sub $1, %rdx
 
-not_equal:
-    mov  $r9b, %al                 # move r8b para al
-    sub  %r8b, %al                 # calcula a difrença
+    jmp .align_check
 
-end:
-	ret
+.aligned:
+    # Comparação principal: 64 bits de cada vez
+    cmp $8, %rdx
+    jl .compare_byte
 
-	.section	.note.GNU-stack
+    .align 8
+.compare_qword:
+    mov (%rdi), %rcx         # Carregar 64 bits de ptr1
+    mov (%rsi), %r8          # Carregar 64 bits de ptr2
+    cmp %r8, %rcx            # Comparar
+    jne .mismatch_qword
+    add $8, %rdi             # Avançar para a próxima palavra de 64 bits
+    add $8, %rsi
+    sub $8, %rdx             # Reduz o número de bytes restantes
+    cmp $8, %rdx
+    jge .compare_qword
+
+.compare_byte:
+    test %rdx, %rdx
+    jz .end
+
+.compare_byte_loop:
+    movzbl (%rdi), %r9d      # Carregar byte de ptr1
+    movzbl (%rsi), %r8d      # Carregar byte de ptr2
+    cmp %r8d, %r9d           # Comparar
+    jne .mismatch_byte
+    add $1, %rdi             # Avançar para o próximo byte
+    add $1, %rsi
+    sub $1, %rdx             # Reduz o número de bytes restantes
+    test %rdx, %rdx
+    jnz .compare_byte_loop
+
+.end:
+    mov $0, %eax
+    pop %r8
+    pop %rcx
+    pop %rsi
+    pop %rdi
+    leave
+    ret
+
+.mismatch_qword:
+    # Encontrou uma diferença nos 64 bits comparados
+    mov %rcx, %rax
+    sub %r8, %rax
+    jmp .end
+
+.mismatch_byte:
+    # Encontrou uma diferença nos bytes comparados
+    mov %r9d, %eax
+    sub %r8d, %eax
+    jmp .end

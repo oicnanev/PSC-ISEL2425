@@ -13,59 +13,67 @@ short *get_val_ptr(struct info items[],
 			: NULL;
 }
 */
-	.text
-	.global	get_val_ptr
+
+  .section .text
+  .globl get_val_ptr
+
 get_val_ptr:
-	push %rbp
-    mov %rsp, %rbp
-    
-    # Carregar os parâmetros
-    mov %rdi, -8(%rbp)      # items
-    mov %rsi, -16(%rbp)     # item_idx
-    mov %rdx, -24(%rbp)     # data_idx
-    mov %rcx, -32(%rbp)     # val_idx
-    mov %r8, -40(%rbp)      # mask
-    
-    # Carregar items[item_idx]
-    mov -8(%rbp), %rax      # items
-    mov -16(%rbp), %rbx     # item_idx
-    shl $5, %rbx            # sizeof(struct info) == 32
-    add %rbx, %rax          # items + item_idx * sizeof(struct info)
-    mov %rax, %rsi
-    
-    # Verificar se items[item_idx].valid
-    mov 16(%rsi), %eax      # items[item_idx].valid
-    test %eax, %eax
-    jz invalid              # Se valid == 0, salta para invalid
-    
-    # Carregar items[item_idx].data[data_idx]
-    mov -24(%rbp), %rcx     # data_idx
-    mov 8(%rsi), %rdx       # items[item_idx].data
-    shl $3, %rcx            # sizeof(struct data *) == 8
-    add %rcx, %rdx          # data + data_idx * sizeof(struct data *)
-    mov (%rdx), %rsi
-    
-    # Verificar se val_idx < items[item_idx].data[data_idx]->length
-    mov -32(%rbp), %rcx     # val_idx
-    mov 2(%rsi), %dx        # items[item_idx].data[data_idx]->length
-    cmp %dx, %cx
-    jge invalid             # Se val_idx >= length, salta para invalid
+    # Prologo
+    push %rbp                       # Salva o valor de %rbp
+    mov  %rsp, %rbp                 # Configura o quadro de pilha
+    push %rbx                       # Salva %rbx (preservado pela convenção de chamada)
 
-    # Verificar se items[item_idx].data[data_idx]->flags & mask
-    mov -40(%rbp), %r8w     # mask
-    mov (%rsi), %ax         # items[item_idx].data[data_idx]->flags
-    and %r8w, %ax
-    jz invalid              # Se flags & mask == 0, salta para invalid
+    # Argumentos de entrada:
+    # items      -> %rdi
+    # item_idx   -> %rsi
+    # data_idx   -> %rdx
+    # val_idx    -> %rcx
+    # mask       -> %r8
 
-    # Retornar &items[item_idx].data[data_idx]->vals[val_idx]
-    lea 4(%rsi, %rcx, 2), %rax
-    jmp end
+    # Carrega o campo 'valid' do item `items[item_idx]`
+    mov  %rsi, %rax                  # item_idx em %rax
+    shl  $4, %rax                    # Multiplica item_idx por 16 bytes (sizeof(struct info))
+    add  %rdi, %rax                  # Calcula o endereço de items[item_idx]
+    mov  12(%rax), %eax              # Carrega o campo 'valid' (offset 12 em struct info)
 
-invalid:
-    mov $0, %rax
+    # Verifica se items[item_idx].valid é 0
+    test %eax, %eax                  # Testa se 'valid' é zero
+    jz   return_null                 # Se zero, retorna NULL
+
+    # Carrega o endereço de data -> data[data_idx] (dentro de items[item_idx])
+    mov  (%rax), %rbx                # Carrega items[item_idx].data (ponteiro de ponteiro)
+    mov  %rdx, %rax                  # data_idx em %rax
+    shl  $3, %rax                    # Multiplica data_idx por 8 (sizeof(struct data*))
+    add  %rbx, %rax                  # Adiciona ao ponteiro de ponteiro para obter data[data_idx]
+
+    # Verifica se data[data_idx] não é NULL
+    mov  (%rax), %rbx                # Carrega o ponteiro data[data_idx] em %rbx
+    test %rbx, %rbx                  # Verifica se data[data_idx] é NULL
+    jz   return_null                 # Se for NULL, retorna NULL
+
+    # Carrega o campo 'length' de data[data_idx]
+    movw 2(%rbx), %ax                # Carrega o campo 'length' de data[data_idx]
+    cmp  %cx, %ax                    # Compara 'val_idx' com 'length'
+    jbe  return_null                 # Se val_idx >= length, retorna NULL
+
+    # Carrega o campo 'flags' de data[data_idx] e aplica o 'mask'
+    movw (%rbx), %ax                 # Carrega o campo 'flags'
+    test %r8w, %ax                   # Aplica o 'mask' com AND
+    jz   return_null                 # Se o resultado for zero, retorna NULL
+
+    # Se todas as condições são verdadeiras, retorna o endereço de data[data_idx].vals[val_idx]
+    lea  4(%rbx,%rcx,2), %rax         # Calcula o endereço de vals[val_idx] (cada short ocupa 2 bytes)
+    jmp  end                          # Pula para o final
+
+return_null:
+    xor  %rax, %rax                   # Retorna NULL (rax = 0)
 
 end:
-	leave
-	ret
+    # Epilogo
+    pop  %rbx                         # Restaura %rbx
+    mov  %rbp, %rsp                   # Restaura o ponteiro de pilha
+    pop  %rbp                         # Restaura o quadro de pilha
+    ret                               # Retorna
+
 
 	.section	.note.GNU-stack

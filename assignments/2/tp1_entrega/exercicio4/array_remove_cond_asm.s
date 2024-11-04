@@ -14,53 +14,66 @@ size_t array_remove_cond(void **array, size_t size,
 	return size;
 }
 */
+
 	.text
-	.global	array_remove_cond
+    .globl array_remove_cond
+
 array_remove_cond:
-	# Parâmetros:
-    # rdi - array (void **)
-    # rsi - size (size_t)
-    # rdx - eval (int (*)(const void *, const void *))
-    # rcx - context (void *)
+    # Prologuo
+    push %rbp                      # Salva o Base pointer (stack pointer)
+    mov  %rsp, %rbp                # Configura a stack frame
+    push %rbx                      # Salva o %rbx
 
-    push rbp
-    mov rbp, rsp
-    sub rsp, 32                # Espaço para variáveis locais
+    # Parâmetros:
+    # array       -> %rdi
+    # size        -> %rsi
+    # eval        -> %rdx
+    # context     -> %rcx
+    # element_size -> %r8
 
-    mov r8, rdi                # r8 = current = array
-    lea r9, [rdi + rsi * 8]    # r9 = last = array + size
+    # Configuração de variáveis locais
+    mov  %rdi, %r9                 # Guarda 'array' em %r9 (ponteiro para início do array)
+    mov  %rsi, %r10                # Guarda 'size' em %r10
+    imul %r8, %rsi                 # Multiplica 'size' por 'element_size'
+    lea  (%r9, %rsi, 1), %r11      # Calcula 'last' (array + size * element_size) em %r11
 
-loop:
-    cmp r8, r9                 # current < last?
-    jge done
+loop_start:
+    cmp  %r9, %r11                 # Verifica se current < last
+    jge  end_loop                  # Se current >= last, termina o loop
 
-    mov rdi, [r8]              # rdi = *current
-    mov rsi, rcx               # rsi = context
-    call rdx                   # eval(*current, context)
-    test eax, eax              # Verifica o retorno de eval
-    jz next                    # Se eval retornar 0, pula para .next
+    # Chamada para eval(*current, context)
+    mov  (%r9), %rdi               # Coloca *current em %rdi (primeiro argumento para eval)
+    mov  %rcx, %rsi                # Coloca context em %rsi (segundo argumento para eval)
+    call *%rdx                     # Chama a função eval
 
-    # memmove(current, current + 1, (last - current - 1) * sizeof(void *))
-    lea rdi, [r8 + 8]          # rdi = current + 1
-    mov rsi, r8                # rsi = current
-    mov rdx, r9
-    sub rdx, r8
-    sub rdx, 8
-    call memmove
+    test %eax, %eax                # Verifica o retorno de eval
+    jz   no_remove                 # Se eval retornar 0, salta a remoção
 
-    sub rsi, 1                 # size -= 1
-    sub r9, 8                  # last -= 1
-    jmp loop
+    # Remoção do elemento (memmove)
+    lea  (%r9, %r8, 1), %rdi       # Ponteiro para current + 1 (novo início de origem para memmove)
+    mov  %r9, %rsi                 # Ponteiro para current (destino em memmove)
+    sub  %r9, %r11                 # Calcula o número de elementos após current
+    sub  %r8, %r11                 # Ajusta para contar sizeof(void *)
+    mov  %r11, %rdx                # Tamanho em bytes a ser movido
+    call memmove                   # Executa memmove
 
-next:
-    add r8, 8                  # current += 1
-    jmp loop
+    # Ajustes após a remoção
+    sub  $1, %r10                  # Decrementa o tamanho do array
+    sub  %r8, %r11                 # Ajusta o ponteiro 'last' após a remoção (last -= 1)
+    jmp  loop_start                # Continua o loop
 
-done:
-    mov rax, rsi               # Retorna size
-    leave
+no_remove:
+    add  %r8, %r9                  # current += element_size (avança ponteiro)
+    jmp  loop_start                # Continua o loop
 
-	ret
+end_loop:
+    mov  %r10, %rax                # Coloca o tamanho final em %rax (valor de retorno)
 
-	.section	.note.GNU-stack
+    # Epiloguo
+    pop  %rbx                      # Restaura o %rbx
+    mov  %rbp, %rsp                # Restaura o stack pointer
+    pop  %rbp                      # Restaura a stack frame
+    ret                            # Retorna
 
+
+    .section    .note.GNU-stack

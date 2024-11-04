@@ -1,90 +1,106 @@
     .text
     .global my_memcmp
 
-# Função my_memcmp
-# Parâmetros:
-# - rdi: Ponteiro para ptr1
-# - rsi: Ponteiro para ptr2
-# - rdx: Número de bytes para comparar (num)
 my_memcmp:
+    # Prologue
     push %rbp
     mov %rsp, %rbp
-    push %rdi
-    push %rsi
-    push %rcx
-    push %r8
+    push %rbx
+    push %r12
 
-    # Alinhar os ponteiros para múltiplos de 8
-    # Comparar byte a byte até que estejam alinhados
-.align_check:
-    mov %rdi, %r9
-    and $7, %r9
-    jz .aligned
+    # Parâmetros:
+    # ptr1 -> %rdi
+    # ptr2 -> %rsi
+    # num  -> %rdx
 
-    # Comparação byte a byte para alinhamento
-    cmp $0, %rdx
-    jle .end
+    # Inicialização
+    mov %rdi, %r8           # Guarda ptr1 em %r8
+    mov %rsi, %r9           # Guarda ptr2 em %r9
+    mov %rdx, %r10          # Guarda num em %r10
 
-    movzbl (%rdi), %r9d
-    movzbl (%rsi), %r8d
-    cmp %r9d, %r8d
-    jne .mismatch_byte
+    # Se num é 0, retorna 0 (são iguais)
+    test %r10, %r10
+    jz .equal
 
-    add $1, %rdi
-    add $1, %rsi
-    sub $1, %rdx
+    # Verifica se ambos os ponteiros são alinhados a 8 bytes
+    mov %r8, %rax
+    and $0x7, %rax
+    jnz .unaligned          # Se ptr1 não está alinhado, processa não alinhado
 
-    jmp .align_check
+    mov %r9, %rbx
+    and $0x7, %rbx
+    jnz .unaligned          # Se ptr2 não está alinhado, processa não alinhado
 
 .aligned:
-    # Comparação principal: 64 bits de cada vez
-    cmp $8, %rdx
-    jl .compare_byte
+    # Loop para comparar blocos de 64 bits
+    mov %r10, %r12          # Guarda num em %r12 para contagem de bytes
+    shr $3, %r10            # Divide num por 8 para contagem de blocos de 64 bits
+    jz .compare_remaining    # Se não houver blocos de 64 bits, pula para comparação de bytes restantes
 
-    .align 8
-.compare_qword:
-    mov (%rdi), %rcx         # Carregar 64 bits de ptr1
-    mov (%rsi), %r8          # Carregar 64 bits de ptr2
-    cmp %r8, %rcx            # Comparar
-    jne .mismatch_qword
-    add $8, %rdi             # Avançar para a próxima palavra de 64 bits
-    add $8, %rsi
-    sub $8, %rdx             # Reduz o número de bytes restantes
-    cmp $8, %rdx
-    jge .compare_qword
+.compare_64:
+    mov (%r8), %rax         # Carrega 8 bytes de ptr1
+    mov (%r9), %rbx         # Carrega 8 bytes de ptr2
+    cmp %rbx, %rax          # Compara os blocos de 8 bytes
+    jne .diff_found_64      # Se diferentes, vai para cálculo do resultado
+    add $8, %r8             # Avança ptr1
+    add $8, %r9             # Avança ptr2
+    sub $8, %r12            # Decrementa o contador
+    jnz .compare_64         # Continua o loop
 
-.compare_byte:
-    test %rdx, %rdx
-    jz .end
+.compare_remaining:
+    # Processa bytes restantes
+    and $0x7, %r12          # Restaura os últimos bytes a serem comparados
+    jz .equal               # Se não houver bytes restantes, os blocos são iguais
 
-.compare_byte_loop:
-    movzbl (%rdi), %r9d      # Carregar byte de ptr1
-    movzbl (%rsi), %r8d      # Carregar byte de ptr2
-    cmp %r8d, %r9d           # Comparar
-    jne .mismatch_byte
-    add $1, %rdi             # Avançar para o próximo byte
-    add $1, %rsi
-    sub $1, %rdx             # Reduz o número de bytes restantes
-    test %rdx, %rdx
-    jnz .compare_byte_loop
+.compare_bytes:
+    movb (%r8), %al         # Carrega um byte de ptr1
+    movb (%r9), %bl         # Carrega um byte de ptr2
+    cmp %al, %bl            # Compara os bytes
+    jne .diff_found         # Se diferentes, calcula o resultado
+    inc %r8                 # Avança ptr1
+    inc %r9                 # Avança ptr2
+    dec %r12                # Decrementa contador de bytes
+    jnz .compare_bytes      # Continua o loop se houver mais bytes
+
+.equal:
+    # Se todos os bytes comparados são iguais, retorna 0
+    xor %eax, %eax          # Define o retorno como 0
+    jmp .end
+
+.diff_found_64:
+    # Se houver diferença em blocos de 64 bits
+    sub %rbx, %rax          # Calcula a diferença entre os blocos
+    jmp .end
+
+.diff_found:
+    # Se houver diferença em bytes, calcula o valor de retorno
+    movsbl %al, %eax        # Converte o byte atual de ptr1 para 32 bits
+    movsbl %bl, %ebx        # Converte o byte atual de ptr2 para 32 bits
+    sub %ebx, %eax          # Calcula a diferença entre os bytes
 
 .end:
-    mov $0, %eax
-    pop %r8
-    pop %rcx
-    pop %rsi
-    pop %rdi
-    leave
+    # Epilogue
+    pop %r12
+    pop %rbx
+    mov %rbp, %rsp
+    pop %rbp
     ret
 
-.mismatch_qword:
-    # Encontrou uma diferença nos 64 bits comparados
-    mov %rcx, %rax
-    sub %r8, %rax
-    jmp .end
+.unaligned:
+    # Loop para comparar byte a byte quando não alinhados
+    mov %r10, %r12          # Guarda num em %r12
+    jz .equal               # Se num é 0, já são iguais
 
-.mismatch_byte:
-    # Encontrou uma diferença nos bytes comparados
-    mov %r9d, %eax
-    sub %r8d, %eax
-    jmp .end
+.unaligned_loop:
+    movb (%r8), %al         # Carrega um byte de ptr1
+    movb (%r9), %bl         # Carrega um byte de ptr2
+    cmp %al, %bl            # Compara os bytes
+    jne .diff_found         # Se diferentes, calcula o resultado
+    inc %r8                 # Avança ptr1
+    inc %r9                 # Avança ptr2
+    dec %r12                # Decrementa contador
+    jnz .unaligned_loop     # Continua o loop se houver mais bytes
+
+    jmp .equal              # Se todos os bytes são iguais, vai para o retorno
+
+    .section    .note.GNU-stack

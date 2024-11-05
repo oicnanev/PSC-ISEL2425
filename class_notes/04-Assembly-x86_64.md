@@ -419,6 +419,67 @@ Desloca o conteúdo de operando para a direita inserindo, em cada passo, o bit d
 
 ![ror](./img/ror.png)
 
+- **rol <nbits>, <operando>**
+
+Desloca o conteúdo de operando para a esquerda inserido, em cada passo, o bits de maior peso na posição de menor peso e na *carry flag*
+
+![rol](./img/rol.png)
+
+- **rcr <nbits>, <operando>**
+
+Desloca o conteúdo de operando para a direita inserindo, em cada passo, o bit de menor peso na *carry flag* e o conteúdo da *carry flag* na posição de maior peso
+
+![rcr](./img/rcr.png)
+
+- **rcl <nbits>, <operando>**
+
+Desloca o conteúdo de operando para a esquerda inserindo, em cada passo, o bit de maior peso na *carry flag* e o conteúdo da *carry flag* na posição de menor peso
+
+![rcl](./img/rcl.png)
+
+##### Exemplos
+
+Considerando **a** um valor expresso a 64bit, previmente carregado em RAX
+
+![examples](./img/rotateEg.png)
+
+Considerando **a** um valor expresso a 128bit previamente carregado em RDX:RAX
+
+![examples](./img/rotate128.png)
+
+#### Instruções para controlo de execução
+
+- **jmp <endereço>**
+
+Executa o salto para o endereço definido pelo argumento da instrução. O endereço pode ser definido em absoluto, através de um valor imediato, pelo conteúdo de um registo ou de uma posição de memória, ou pode ser definido de forma relativa, através de um valor imediato ao valor corrente do RIP.
+
+|   Instrução   | Notas |
+| ------------- | ----- |
+| **jmp  .L2**  | .L2 representa um valor constante |
+| **jmp  \*%rax** | salta para o endereço que está em RAX |
+| **jmp  \*(rbx)** | salta para o endereço que em memória no endereço indicado por RBX |
+
+ - **call <endereço>**
+
+Guarda RIP no *stack* (push %rip). Nessa altura RIP contém o endereço da instrução seguinte. Depois executa o salto para o endereço indicado (jmp <endereço>). O endereço de salto pode ser um valor imediato, o conteúdo de um registo ou de uma posição de memória.
+
+**call <endereço>** é equivalente a **push %rip** seguido de **jmp <endereço>**
+
+- **ret**
+
+Coloca o valor que está no topo do *stack* em RIP (pop %rip). Sendo o valor que está no topo do *stack* o endereço empilhado pela última instrução **call**, esta instrução provoca o retorno do processamento à instrução a seguir aessa instrução **call**.
+
+![call e ret](./img/call_ret.png)
+
+- **enter**
+
+Na sua forma básica, é equivalente a:
+
+```assembly
+``
+
+
+
 
 
 

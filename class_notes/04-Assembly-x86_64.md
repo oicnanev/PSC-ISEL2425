@@ -476,7 +476,155 @@ Coloca o valor que está no topo do *stack* em RIP (pop %rip). Sendo o valor que
 Na sua forma básica, é equivalente a:
 
 ```assembly
-``
+push %rbp
+mov  %rsp, %rbp
+```
+
+É usada no início das funções para preparar a *stack frame*
+
+- **leave**
+
+É equivalente a:
+
+```assembly
+mov  %rbp, %rsp
+pop  %rbp
+```
+
+É usada no finm das funções para restaurar o *stack pointer* e o *base pointer*
+
+##### Exemplo
+
+![Example](./img/example_control.png)
+
+#### Instruções sobre blocos de memória
+
+- **movs**
+
+Move o conteúdo da memória indicada por RSI para a memória indicada por RDI
+
+- **cmps**
+
+Compara o conteúdo da memória indicada por RSI com o conteúdo da memória indicada por RDI
+
+- **scas**
+
+Compara o conteúdo de RAX com o conteúdo da memória pontada por RDI
+
+- **rep repe repz repne repnz**
+
+Prefixos de repetição. Provocam a repetição da operação da instrução seguinte enquanto o registo RCX for maior que zero e se verificar a condição indicada
+
+#### Instruções relacionadsa com *flags*
+
+- **test <operando2>, <operando1>**
+
+Executa a operação lógica AND entre os bits das mesmas posições dos operandos. Não aproveita o resultado mas afeta as *flags*
+
+```assembly
+# Testa o valor do bit 7 - executa EAX & 0x80 e afeta as flags
+test $0x80, %eax
+jz   label
+```
+
+- **cmp <subtraendo>, <diminuendo>**
+
+Subtrai **subtraendo** ao **diminuendo**. O resultado não é aproveitado, apenas as *flags* são afetadas. O **subtraedo** pode ser um valor imediato, um registo, ou uma posição de memória. O **diminuendo** pode ser um registo ou uma posição de memória.
+
+```assembly
+cmp  %ebx, %eax         # realiza EAX - EBX e afeta as flags
+```
+
+- **j<cond> <endereço>**
+
+Se a condição for verdadeira, muda o endereço de execução para o endereço definido pelo argumento. A verificação da condição é realizada sobre o estado das *flags*. O endereço de salto é definido de forma relativa, através de um valor imediato a adicionar ao valor corrente de RIP
+
+Encarando os operandos como números naturais
+
+| Mnemonica    | Condition tested | jump if... |
+| ------------ | ---------------- | ---------- |
+| **ja/jnbe**  | (CF or ZF) = 0   | above / not bellow nor equal |
+| **jae/jnb**  | CF = 0           | above or equal / not bellow |
+| **jb/jnae**  | CF = 1           | bellow / not above nor equal |
+| **jc**       | (CF or ZF) = 1   | carry |
+| **je/jz**    | ZF = 1           | equal / zero |
+| **jnc**      | CF = 0           | not carry |
+| **jne/jnz**  | ZF = 0           | not equal / not zero |
+| **jnp/jpo**  | PF = 0           | not parity / parity odd |
+| **jp/jpe**   | PF = 1           | parity / parity even |
+
+Encarando os operandos como números relativos
+
+| Mnemonica    | Condition tested | jump if... |
+| ------------ | ---------------- | ---------- |
+| **jg/jnle**  | ((SF xor OF) or ZF) = 0 | greater / not less nor equal |
+| **jge/jnl**  | (SF xor OF) = 0  | greater or equal / not less |
+| **jl/jnge**  | (SF xor OF) = 1  | less / not greater nor equal |
+| **jle/jng**  | ((SF xor OF) or ZF) = 1 | less or equal / not greater |
+| **jno**      | OF = 0           | not overflow |
+| **jns**      | SF = 0           | not sign (positive, including 0) |
+| **jo**       | OF = 1           | overflow |
+| **js**       | SF = 1           | sign (negative) |
+
+### Sintaxe GNU
+
+Um programa é composto por uma sequência de *statements*. Um *statement* começa opcionalmente com uma *label* ao que se segue, também opcionalmente, uma instrução ou directiva, pode ter um comentário e acaba com o fim da linha ou com o caractér separador ';' (ponto e vírgula).
+
+```assembly
+label: 
+		.directive    	followed by something
+another_label:				# this is an empty statement
+		instruction		operand_1, operand_2, ....
+```
+
+- **label** - símbolo seguido de caractér ':' (dois pontos). Define o endereço do elemento seguinte - instrução ou variável. Pode ser composto por letras, dígitos e os caracteres '.' (ponto) e '_' (underscore). As *labels* locais são definidas por um dígito na forma N: com N de 0 a 9 e referidos por Nb ou Nf.
+- **instruction** - qualquer instrução do processador
+- **comment** - o caractés '#' indica um comentário até ao final da linha. Podem também ser inseridos comentários como em C com '/\*' no início e '\*/' no fim.
+
+#### Sintaxe Intel
+
+```assembly
+mov	rax, rbx
+call	[rdi]
+shr	rcx, 2
+mov 	[rbp + rdi * 4], rax
+```
+
+sintaxe geral para operandos em memória - **displacement[base + index * scale]**
+
+#### Sintaxe AT&T
+
+```assembly
+movl 	%ebx, %eax
+call	*(%edi)
+shrl	$2, %ecx
+movl	%eax, (%ebp, %edi, 8)
+```
+
+Sintaxe geral para operandos em memória - **displacemente(base, index, scale)**
+
+**Sufixos** - as mnem+onicas podem ter sufixo **b**, **w**, **l** ou **q** para indicar, respetivamente, que o operando tem a dimensão de 8, 16, 32 ou 64 bits.
+
+### Expressões
+
+Uma expressão é equivalente a um valor numérico. Esse valor é determinado diretamente, por substituição de um símbolo ou por aplicação de operações a outras expressões.
+
+Uma expressão pode aparecer em qualquer instrução onde seja esperada uma constante
+
+Os valores numéricos podem ser representados em decimal, hexadecimal (0xddd), octal (0ddd), binário (0bddddd) ou caracteres entre '' (plicas). Exemplos: 34, 0x3f, 034, 0b01001, 'K'
+
+#### Operadores unários
+
+- **-** Negação em complemento para 2 (inverso)
+- **~** negação bit a bit 
+
+#### Operadores binários
+
+
+
+
+
+
 
 
 

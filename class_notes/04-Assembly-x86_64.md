@@ -615,14 +615,134 @@ Os valores numéricos podem ser representados em decimal, hexadecimal (0xddd), o
 
 #### Operadores unários
 
-- **-** Negação em complemento para 2 (inverso)
-- **~** negação bit a bit 
+- **-** 	Negação em complemento para 2 (inverso)
+- **~** 	Negação bit a bit 
 
 #### Operadores binários
 
+- **\*** 	Operador multiplicação
+- **/**	 	Divisão inteira
+- **%**	 	Resto da divisão inteira
+- **<<** 	Deslocar para a esquerda
+- **|** 	Disjunção bit a bit
+- **&** 	Conjunção bit a bit
+- **^** 	Disjunção exclusiva bit a bit
+- **>>** 	Deslocar para a direita
+- **+** 	Adição
+- **-** 	Subtração
 
+#### Directivas
 
+Resumo das principais directivas:
 
+| Directivas                      | Notas                        |
+| ------------------------------- | ---------------------------- |
+| `.align expression` | Insere bytes a zero até um múliplo do parâmetro |
+| `.ascii "string"` | Insere os caracteres que compõem a string |
+| `.asciz "string"` | Insere os caracteres que compõem a string com a terminação a zero. |
+| `.byte expression` | Insere o valor especificado a 8 bits (1 byte) |
+| `.2byte expression` | Insere o valor especificado a 16 bits (2 bytes) |
+| `.word expression` | Insere o valor especificado a 16 bits (2 bytes) |
+| `.hword expression` | Insere o valor especificado a 16 bits (2 bytes) |
+| `.short expression` | Insere o valor especificado a 16 bits (2 bytes) |
+| `.4byte expression` | Insere o valor especificado a 32 bits (4 bytes) |
+| `.long expression` | Insere o valor especificado a 32 bits (4 bytes) |
+| `.int expression` | Insere o valor especificado a 32 bits (4 bytes) |
+| `.8byte expression` | Insere o valor especificado a 64 bits (8 bytes) |
+| `.quad expression` | Insere o valor especificado a 64 bits (8 bytes) |
+| `.octa expression` | Insere o valor especificado a 128 bits (16 bytes) |
+| `.space size, fill` | Insere size bytes com o valor fill |
+| `.skip size, fill` | Insere size bytes com o valor fill |
+| `.zero size` | Insere um bloco com dimensão size preenchido com zeros |
+| `.text` | Código das instruções |
+| `.data` | Para variáveis iniciadas |
+| `.bss` | Para variáveis não iniciadas |
+| `.rodata` | Para dados constantes |
+| `.section .name` | Passa a inserir na secção com o nome name |
+| `.global symbol` | Declara symbol visível para os outros módulos |
+| `.extern symbol` | Declara que symbol está definido noutro módulo |
+| `.include "file"` | Insere o conteúdo de file na posição desta diretiva |
+| `.if expression` | Para compilação condicional |
+| `.else if expression` | Para compilação condicional |
+| `.else` | Para compilação condicional |
+| `.endif` | Para compilação condicional |
+| `.equ symbol, expression` | Define symbol com o valor de expression |
+| `.set symbol, expression` | Define symbol com o valor da expression |
+| `.err` | Imprime uma mensagem de erro e termina a compilação |
+
+#### Sufixos
+
+O sufixo serve para definir a dimensão da palavra de dados processada pela instrução.
+
+Sempre que um dos operandos da instrução é um registo, o sufixo é dispensável. O *assambler* infere a dimensão da palavra pela designação do registo.
+
+| Instrução | Dimensão dos dados |
+| --------- | ------------------ |
+| `mov 	$8, %al` | 8 bits |
+| `mov  (%rbx), %ax` | 16 bits |
+| `add  %r8d, %r10d` | 32 bits |
+| `push $0` | 64 bits - as instruções *push* e *pop* manipulam sempre valores a 64 bits |
+
+ 
+Quando não é possível ao *assembler* determinar a dimensão da palavra através dos argumentos da instrução, o uso do sufixo é necessário
+
+| Instrução | Dimensão dos dados |
+| --------- | ------------------ |
+| `incb (%rbx)` | 8 bits |
+| `movw $7, (%rbx)` | 16 bits |
+| `shrl %cl, mask(%rip)` | 32 bits |
+| `decq 16(%rbp, %rio, 8)` | 64 bits |
+
+Há instruções com sufixos sintaticamente obrigatórios. É o caso das instruções de extensão de bits.
+
+| Instrução | Dimensão dos dados |
+| --------- | ------------------ |
+| `movsbq  %dl, %rbx` | Extensão com o valor do bit de sinal de 8 para 64 bits |
+| `movzbq  (%rbx), %r10` | Extensão com zero de 8 para 64 bits |
+| `movswl  mask(%rip), %eax` | Extensão com o valor do bit de sinal de 16 para 32 bits |
+
+| Declaração C | Designação Intel | Sufixo GAS | Dimensão (Bytes) | Alinhamento |
+| ---- | ---- | ---- | ----- | ------ |
+| char | byte | b | 1 | 1 |
+| short | word | w | 2 | 2 |
+| int | double word | l | 4 | 4 |
+| unsigned int | double word | l | 4 | 4 |
+| long int | quad word | q | 8 | 8 |
+| unsigned long int | quad word | q | 8 | 8 |
+| float | single precision | s | 4 | 4 |
+| double | double precision | d | 8 | 8 |
+| pointer (char *) | quad word | q | 8 | 8 |
+| struct e union |  |  | A dimensão de um tipo composto é multipla do seu alinhamento. | O alinhamento de um tipo composto é igual ao maior alinhamento interno. |
+
+ 
+### Ferramentas
+
+#### GCC
+
+Algumas das opções **gcc** relacionadas com a geração de código.
+
+- `-s` - Geração de código em linguagem assembly
+- `-masm=intel` - Acrescentar à opção anterior para gerar sintaxe Intel
+- `0g` - Geração de código com otimização legível
+- `fno-stack-protector` - Supromir geração de código com verificação de integridade do *stack*
+- `fno-stack-clash-protection` - Suprimir a geração de código de mitigação da vulnerabilidade *stack clash*
+
+#### GNU AS
+
+O GNU *assembler* usa sintaxe AT&T por omissão. para usar sintaxe Intel, deve incluir-se no ficheiro fonte a directiva: `.intel_syntax noprefix`
+
+Invocação do **as** (GNU assembler) na linha de comandos (shell)
+
+```bash
+$ as [-a[=file]] [-defsym sym=val] [--gstabs] [-I dir] [-o objfile] srcfile
+```
+
+- `-a` - Gerar ficheiro listagem
+- `=file` - Criar a listagem no ficheiro indicado
+- `-defsym` - Definir um símbolo
+- `--gstabs` - Incluir informação para *debugging* no ficheiro de saída (*object relocation file*)
+- `-I` - Definir directoria de pesquisa para ficheiros *include*
+- `-o` - Definir o nome do ficheiro de saída
 
 
 

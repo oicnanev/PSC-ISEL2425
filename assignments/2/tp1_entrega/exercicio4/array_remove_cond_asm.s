@@ -15,65 +15,66 @@ size_t array_remove_cond(void **array, size_t size,
 }
 */
 
-	.text
-    .globl array_remove_cond
+.section .text
+.globl array_remove_cond
 
 array_remove_cond:
-    # Prologuo
-    push %rbp                      # Salva o Base pointer (stack pointer)
-    mov  %rsp, %rbp                # Configura a stack frame
-    push %rbx                      # Salva o %rbx
+    # Prologo
+    push %rbp                       # Salva o base pointer
+    mov  %rsp, %rbp                 # Configura o quadro de pilha
+    push %rbx                       # Salva %rbx (callee-saved)
+    push %r12                       # Salva %r12 (callee-saved)
+    sub  $32, %rsp                  # Aloca espaço para variáveis locais
 
     # Parâmetros:
-    # array       -> %rdi
-    # size        -> %rsi
-    # eval        -> %rdx
-    # context     -> %rcx
-    # element_size -> %r8
+    # array       -> %rdi (ponteiro para array)
+    # size        -> %rsi (tamanho em elementos)
+    # eval        -> %rdx (função de avaliação)
+    # context     -> %rcx (contexto para função eval)
 
-    # Configuração de variáveis locais
-    mov  %rdi, %r9                 # Guarda 'array' em %r9 (ponteiro para início do array)
-    mov  %rsi, %r10                # Guarda 'size' em %r10
-    imul %r8, %rsi                 # Multiplica 'size' por 'element_size'
-    lea  (%r9, %rsi, 1), %r11      # Calcula 'last' (array + size * element_size) em %r11
+    # Configurando variáveis locais
+    mov  %rdi, %r8                  # %r8 = array (ponteiro atual)
+    mov  %rsi, %r9                  # %r9 = size (número de elementos)
+    lea  (%rdi, %rsi, 8), %r10      # %r10 = last (array + size * sizeof(void *))
 
 loop_start:
-    cmp  %r9, %r11                 # Verifica se current < last
-    jge  end_loop                  # Se current >= last, termina o loop
+    cmp  %r8, %r10                  # Verifica se current < last
+    jge  end_loop                   # Sai do loop se current >= last
 
-    # Chamada para eval(*current, context)
-    mov  (%r9), %rdi               # Coloca *current em %rdi (primeiro argumento para eval)
-    mov  %rcx, %rsi                # Coloca context em %rsi (segundo argumento para eval)
-    call *%rdx                     # Chama a função eval
+    # Chama eval(*current, context)
+    mov  (%r8), %rdi                # *current (primeiro argumento para eval)
+    mov  %rcx, %rsi                 # context (segundo argumento para eval)
+    call *%rdx                      # Chama a função eval
 
-    test %eax, %eax                # Verifica o retorno de eval
-    jz   no_remove                 # Se eval retornar 0, salta a remoção
+    test %eax, %eax                 # Verifica o valor retornado por eval
+    jz   no_remove                  # Pula remoção se eval retornar 0
 
-    # Remoção do elemento (memmove)
-    lea  (%r9, %r8, 1), %rdi       # Ponteiro para current + 1 (novo início de origem para memmove)
-    mov  %r9, %rsi                 # Ponteiro para current (destino em memmove)
-    sub  %r9, %r11                 # Calcula o número de elementos após current
-    sub  %r8, %r11                 # Ajusta para contar sizeof(void *)
-    mov  %r11, %rdx                # Tamanho em bytes a ser movido
-    call memmove                   # Executa memmove
+    # Lógica de remoção (memmove para deslocar elementos para a esquerda)
+    lea 8(%r8), %rdi                # current + 1 (source para memmove)
+    mov  %r8, %rsi                  # current (destination para memmove)
+    mov  %r10, %rdx                 # last
+    sub  %r8, %rdx                  # (last - current)
+    sub  $8, %rdx                   # (last - current - 1) elementos
+    call memmove                    # Executa memmove
 
-    # Ajustes após a remoção
-    sub  $1, %r10                  # Decrementa o tamanho do array
-    sub  %r8, %r11                 # Ajusta o ponteiro 'last' após a remoção (last -= 1)
-    jmp  loop_start                # Continua o loop
+    # Ajusta last e size após remoção
+    sub  $8, %r10                   # last -= sizeof(void *)
+    dec  %r9                        # size -= 1
+    jmp  loop_start                 # Continua o loop
 
 no_remove:
-    add  %r8, %r9                  # current += element_size (avança ponteiro)
-    jmp  loop_start                # Continua o loop
+    add  $8, %r8                    # Avança current por um elemento (sizeof(void *))
+    jmp  loop_start                 # Continua o loop
 
 end_loop:
-    mov  %r10, %rax                # Coloca o tamanho final em %rax (valor de retorno)
+    mov  %r9, %rax                  # Retorna o tamanho final
 
-    # Epiloguo
-    pop  %rbx                      # Restaura o %rbx
-    mov  %rbp, %rsp                # Restaura o stack pointer
-    pop  %rbp                      # Restaura a stack frame
-    ret                            # Retorna
+    # Epilogo
+    add  $32, %rsp                  # Restaura o ponteiro de pilha
+    pop  %r12                       # Restaura %r12
+    pop  %rbx                       # Restaura %rbx
+    mov  %rbp, %rsp                 # Restaura o base pointer
+    pop  %rbp                       # Restaura o quadro de pilha
+    ret                             # Retorna
 
-
-    .section    .note.GNU-stack
+.section .note.GNU-stack

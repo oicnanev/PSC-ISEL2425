@@ -11,14 +11,10 @@ my_memcmp:
     test    %rdx, %rdx
     jz      equal
 
-    # Verifica se ambos os ponteiros são alinhados a 8 bytes
+    # Verifica se os ponteiros estão alinhados a 8 bytes, basta verificar um deles
     mov     %rdi, %rax
     and     $0x7, %rax
     jnz     unaligned           # Se ptr1 não está alinhado, processa não alinhado
-
-    mov     %rsi, %r9
-    and     $0x7, %r9
-    jnz     unaligned           # Se ptr2 não está alinhado, processa não alinhado
 
 aligned:
     # Loop para comparar blocos de 64 bits
@@ -67,7 +63,7 @@ end:
 
 unaligned:
     # Loop para comparar byte a byte quando não alinhados
-    mov     %rdx, %r8          # Guarda num em %r8
+    mov     %rdx, %r8           # Guarda num em %r8
     jz      equal               # Se num é 0, já são iguais
 
 unaligned_loop:

@@ -11,9 +11,7 @@ int invoke_and_test(void *, void (*)(), int, ...);
 static size_t _array_remove_cond(void **array, size_t size,
                     int (*eval)(const void *, const void *), void *context) {
 	for (void **current = array, **last = array + size; current < last; ) {
-		printf("Evaluating: %p\n", *current); // DEBUG LINE
 		if (eval(*current, context)) {
-			printf("Removing: %p\n", *current); // DEBUG LINE
 			memmove(current, current + 1, (last - current - 1) * sizeof(void *));
 			size -= 1;
 			last -= 1;
@@ -22,7 +20,6 @@ static size_t _array_remove_cond(void **array, size_t size,
 			current += 1;
 		}
 	}
-	printf("Final size: %zu\n", size); // DEBUG LINE
 	return size;
 }
 
@@ -64,8 +61,7 @@ int main() {
 	for (int i = 0; i < ARRAY_SIZE(tests); ++i) {
 		memcpy(tests[i].array2, tests[i].origin, tests[i].size * sizeof tests[i].origin[0]);
 		size_t size2 = _array_remove_cond((void **)tests[i].array2, tests[i].size, tests[i].compare, tests[i].context);
-		printf("Expected final size for test[%d]: %zu\n", i, size2); // DEBUG LINE
-		
+
 		memcpy(tests[i].array1, tests[i].origin, tests[i].size * sizeof tests[i].origin[0]);
 		size_t size1;
 		int invoke_result = invoke_and_test(&size1, (void (*)())array_remove_cond,
@@ -75,7 +71,7 @@ int main() {
 							register_name[invoke_result]);
 			break;
 		}
-		printf("test[%d] returned size: %zd, expected: %zd\n", i, size1, size2); // DEBUG LINE
+//		printf("test[%d] returned size: %zd, expected: %zd\n", i, size1, size2);
 		if (size1 == size2) {
 			for (size_t j = 0; j < size1; ++j)
 				if (tests[i].array1[j] != tests[i].array2[j])

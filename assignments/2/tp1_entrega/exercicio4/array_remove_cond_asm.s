@@ -15,66 +15,79 @@ size_t array_remove_cond(void **array, size_t size,
 }
 */
 
-.section .text
-.globl array_remove_cond
+	.text
+    .globl array_remove_cond
 
 array_remove_cond:
-    # Prologo
-    push %rbp                       # Salva o base pointer
-    mov  %rsp, %rbp                 # Configura o quadro de pilha
-    push %rbx                       # Salva %rbx (callee-saved)
-    push %r12                       # Salva %r12 (callee-saved)
-    sub  $32, %rsp                  # Aloca espaço para variáveis locais
+    # Prologuo
+    push    %rbp                    # Salva o Base pointer (stack pointer)
+    mov     %rsp, %rbp              # Configura a stack frame
+    subq    $48, %rsp               # Aloca espaco para as variaveis locais
 
     # Parâmetros:
-    # array       -> %rdi (ponteiro para array)
-    # size        -> %rsi (tamanho em elementos)
-    # eval        -> %rdx (função de avaliação)
-    # context     -> %rcx (contexto para função eval)
+    # array       -> %rdi
+    # size        -> %rsi
+    # eval        -> %rdx
+    # context     -> %rcx
+    # element_size -> %r8
 
-    # Configurando variáveis locais
-    mov  %rdi, %r8                  # %r8 = array (ponteiro atual)
-    mov  %rsi, %r9                  # %r9 = size (número de elementos)
-    lea  (%rdi, %rsi, 8), %r10      # %r10 = last (array + size * sizeof(void *))
+    # Armazenar os parametros em variaveis locais (stack frame)    
+    movq    %rdi, -24(%rbp)         # Armazena array em -24(%rbp)
+    movq    %rsi, -32(%rbp)         # Armazena size em -32(%rbp)
+    movq    %rdx, -40(%rbp)         # Armazena eval em -40(%rbp)
+    movq    %rcx, -48(%rbp)         # Armazena context em -48(%rbp)
+
+    # Configuracao de current e last
+    movq    -24(%rbp), %rax         # Carrega array em %rax
+    movq    %rax, -16(%rbp)         # Armazena current em -16(%rbp)
+    movq    -32(%rbp), %rax         # Carrega size em %rax
+    leaq    (,%rax,8), %rdx         # Calcula size * sizeof(void*) em %rdx        
+    movq    -24(%rbp), %rax         # Carrega array em %rax
+    addq    %rdx, %rax              # Adiciona size ao array para obter o last
+    movq    %rax, -8(%rbp)          # Armazena o last em -8(%rbp)
 
 loop_start:
-    cmp  %r8, %r10                  # Verifica se current < last
-    jge  end_loop                   # Sai do loop se current >= last
+    # Loop principal
+    movq    -16(%rbp), %rax         # Carrega current em %rax
+    cmpq    -8(%rbp), %rax          # Compara current com last
+    jge     loop_end                # Se current >= last, termina o loop
 
-    # Chama eval(*current, context)
-    mov  (%r8), %rdi                # *current (primeiro argumento para eval)
-    mov  %rcx, %rsi                 # context (segundo argumento para eval)
-    call *%rdx                      # Chama a função eval
+    # Chamada a eval(*current, context)
+    movq    -16(%rbp), %rax         # Carrega current em %rax
+    movq    (%rax), %rax            # Carrega *current em %rax
+    movq    -48(%rbp), %rdx         # Carrega context em %rdx
+    movq    -40(%rbp), %rcx         # Carrega eval em %rcx
+    movq    %rdx, %rsi              # Coloca context em %rsi 
+    movq    %rax, %rdi              # Coloca *current em %rdi
+    call    *%rcx                   # Chama eval(*current, context)
 
-    test %eax, %eax                 # Verifica o valor retornado por eval
-    jz   no_remove                  # Pula remoção se eval retornar 0
+    testl   %eax, %eax              # Testa o retorno de eval
+    je      no_remove               # Se eval retornou 0, nada ha a remover
 
-    # Lógica de remoção (memmove para deslocar elementos para a esquerda)
-    lea 8(%r8), %rdi                # current + 1 (source para memmove)
-    mov  %r8, %rsi                  # current (destination para memmove)
-    mov  %r10, %rdx                 # last
-    sub  %r8, %rdx                  # (last - current)
-    sub  $8, %rdx                   # (last - current - 1) elementos
-    call memmove                    # Executa memmove
+    # Remocao do elemento
+    movq    -8(%rbp), %rax          # Carrega last em %rax
+    subq    -16(%rbp), %rax         # Calcula last - current
+    leaq    -8(%rax), %rdx          # Ajuste de (last - current - 1) elementos
+    movq    -16(%rbp), %rax         # Carrega current em %rax
+    leaq    8(%rax), %rcx           # Calcula current + 1
+    movq    -16(%rbp), %rax         # carrega current em %rax
+    movq    %rcx, %rsi              # Coloca current + 1 em %rsi
+    movq    %rax, %rdi              # Coloca current em %rdi 
+    call    memmove                 # Chama memmove
 
-    # Ajusta last e size após remoção
-    sub  $8, %r10                   # last -= sizeof(void *)
-    dec  %r9                        # size -= 1
-    jmp  loop_start                 # Continua o loop
+    subq    $1, -32(%rbp)           # Decremeta size
+    subq    $8, -8(%rbp)            # Atualiza o last
+    jmp loop_start
 
 no_remove:
-    add  $8, %r8                    # Avança current por um elemento (sizeof(void *))
-    jmp  loop_start                 # Continua o loop
+    addq    $8, -16(%rbp)           # Avanca current para o proximo elemento
+    jmp     loop_start
 
-end_loop:
-    mov  %r9, %rax                  # Retorna o tamanho final
+loop_end:
+    movq    -32(%rbp), %rax         # Coloca o tamanho final em %rax
 
     # Epilogo
-    add  $32, %rsp                  # Restaura o ponteiro de pilha
-    pop  %r12                       # Restaura %r12
-    pop  %rbx                       # Restaura %rbx
-    mov  %rbp, %rsp                 # Restaura o base pointer
-    pop  %rbp                       # Restaura o quadro de pilha
-    ret                             # Retorna
+    leave                           # Restaura o Base pointer
+    ret    
 
-.section .note.GNU-stack
+    .section    .note.GNU-stack

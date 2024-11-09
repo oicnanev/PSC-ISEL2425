@@ -1,0 +1,1 @@
+gcc -g -Wall array_remove_cond_asm.s test_array_remove_cond.c -o test_array_remove_cond

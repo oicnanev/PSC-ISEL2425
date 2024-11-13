@@ -134,4 +134,22 @@ O programa deve aceitar os seguintes comandos:
 
 | Comando | Notas |
 | ------- | ----- |
-| 
+| **Utilizadores** | Listar utilizadores |
+| **uTilizador <identificador>** | Assumir o utilizador indicado como o utilizador corrente |
+| **Produtos <categoria> <critério>** | Listar os produtos da categoria indicada segundo o critério de ordenação indicado. Se a categoria não for reconhecida lista todos os produtos. Os critérios possíveis são **“preço crescente"** ou **"preço decrescente"**. Utilize os sinais `<` e `>` para indicar. |
+| **Carrinho** | Listar os produtos que estão no carrinho de comprar (descrição, preço, quantidade) |
+| **cOmprar <produto> <quantidade>** | Acrescentar um produto ao carrinho de compras |
+| **Finalizar** | Finalizar comprar |
+| **Terminar** | Terminar a execução do programa |
+
+Na construção deste programa deve-se utilizar a biblioteca produzida no exercício anterior.
+
+Na execução de comandos posteriores deve-se reutilizar a informação adquirida em comandos anteriores, minimizando assim o número de pedidos remotos. Para retenção da informação deve criar em memória uma estrutura de dados adequada. Na construção dessa estrutura de dados estabeleça referências com ponteiros entre as entidades, de modo a suprimir ou minimizar as procuras exaustivas. Por exemplo, na variável que representa um carrinho deve existir ponteiros para as variáveis que representam produtos.
+
+Ao terminar a execução, o programa deve explicitamente libertar a memória alocada dinamicamente.
+
+6. Modifique o programa anterior de modo que possam ser acrescentados novos comandos na forma de *plug-in*.
+
+Exemplifique a utilização dessa funcionalidade acrescentando um novo comando que lista na consola as categorias de produtos, que estão no carrinho.
+
+> Data limite de entrega: **15 de dezembro de 2024**

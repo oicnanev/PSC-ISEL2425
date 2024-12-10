@@ -73,7 +73,7 @@ int main() {
         else if (strcmp(command, "Carrinho") == 0) {
             printf("\nCarrinho de compras:\n");
             for (size_t i = 0; i < cart.n_products; i++) {
-                printf("Produto ID: %d, Quantidade: %d\n", cart.products[i].id, cart.products[i].quantity);
+                printf("Produto ID: %d, Quantidade: %ld\n", cart.products[i].id, cart.products[i].quantity);
             }
         }
         else if (sscanf(command, "cOmprar %d %d", &produto_id, &quantidade) == 2) {

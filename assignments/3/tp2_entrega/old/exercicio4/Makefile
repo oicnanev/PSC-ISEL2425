@@ -9,7 +9,7 @@ all: lib/libpsc.so test/test_program
 # Compila a biblioteca dinâmica
 lib/libpsc.so: lib $(OBJ)
 	@echo "Compiling libpsc.so com $(OBJ)..."
-	$(CC) -shared -o $@ $(OBJ) $(LDFLAGS)
+	$(CC) $(CFLAGS) -shared -o $@ $(OBJ) $(LDFLAGS)
 
 # Compila o programa de teste
 test/test_program: test/main.c lib/libpsc.so

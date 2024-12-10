@@ -1,6 +1,8 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include <stddef.h>
+
 typedef struct {
     int id;
     float price;

@@ -27,7 +27,7 @@ json_t *http_get_json(const char *url);
 bool http_post_json(const char *url, json_t *data);
 
 Products *products_get() {
-  const char *url = "https://dummyjson.com/products";
+  const char *url = "https://dummyjson.com/products?limit=0";
   json_t *json = http_get_json(url);
 
   if (!json) {
@@ -64,7 +64,7 @@ Products *products_get() {
 }
 
 Users *users_get() {
-  const char *url = "https://dummyjson.com/users";
+  const char *url = "https://dummyjson.com/users?limit=0";
   json_t *json = http_get_json(url);
 
   if (!json) {

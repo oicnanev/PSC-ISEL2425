@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <dlfcn.h>
 #include "types.h"
 
 // Declaração das funções da biblioteca libpsc.so
@@ -45,11 +46,23 @@ int main() {
     Cart cart = { .user_id = 0, .n_products = 0 };
 
     char command[256];
-    char categoria[100], criterio[100];
+    char categoria[100], criterio[2];
     int user_id, produto_id, quantidade;
+
+    printf("\n--- Dummy Json Store ---\n")
     
     while (1) {
+        printf("\nComandos:");
+        printf("\nUtilizadores - listar utilizadores");
+        printf("\nuTilizadore <id> - usar utilizador com o id escolhido");
+        printf("\nProdutos <categoria> <criterio> - listar produtos, < (preço crescente), > (preço decrescente)");
+        printf("\nCarrinho - listar produtos que estão no carrinho");
+        printf("\nCategoriasCarrinho - listar categorias de produtos que estão no carrinho");
+        printf("\n cOmprar <produto> <quantidade>");
+        printf("\nFinalizar - finalizar comprar");
+        printf("\nTerminar - terminar programa\n");
         printf("\nDigite um comando: ");
+
         fgets(command, sizeof(command), stdin);
         command[strcspn(command, "\n")] = '\0';  // Remove o newline no final da string
 
@@ -73,8 +86,24 @@ int main() {
         else if (strcmp(command, "Carrinho") == 0) {
             printf("\nCarrinho de compras:\n");
             for (size_t i = 0; i < cart.n_products; i++) {
-                printf("Produto ID: %d, Quantidade: %ld\n", cart.products[i].id, cart.products[i].quantity);
+                printf("Produto ID: %d, Quantidade: %d\n", cart.products[i].id, cart.products[i].quantity);
             }
+        }
+        else if (sscanf(command, "CategoriasCarrinho") == 0) {
+            void *handler = dlopen("./pulgins/libcatcard.so", RTLD_NOW);
+            if (!handler) {
+                printf("Função ainda não implementada\n");
+            } else {
+                void (*categcard)() = (void (*)())dlsym(handle, "categcard"); 
+                const char *dlsym_error = dlerror(); 
+                if (dlsym_error) { 
+                    fprintf(stderr, "Erro ao localizar símbolo: %s\n", dlsym_error); 
+                    dlclose(handle);
+                } else {
+                    (*categcard)();
+                }
+            }
+            dlclose(handle);
         }
         else if (sscanf(command, "cOmprar %d %d", &produto_id, &quantidade) == 2) {
             if (produto_id > 0 && produto_id <= products->count) {
@@ -92,11 +121,9 @@ int main() {
         }
         else if (strcmp(command, "Finalizar") == 0) {
             if (cart.n_products > 0) {
-                if (cart_put(&cart)) {
-                    printf("Compra finalizada com sucesso!\n");
-                } else {
-                    printf("Erro ao finalizar a compra.\n");
-                }
+                printf("Compra finalizada com sucesso!\n");
+                // TODO:apagar cart
+                free(cart);
             } else {
                 printf("Carrinho vazio! Não é possível finalizar a compra.\n");
             }

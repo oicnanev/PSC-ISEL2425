@@ -7,20 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Reutilizando o WriteMemoryCallback do exemplo anterior
-static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb,
-                                  void *userp) {
-  size_t realsize = size * nmemb;
-  char **response_ptr = (char **)userp;
-
-  if (*response_ptr) {
-    free(*response_ptr);
-  }
-
-  *response_ptr = strndup(contents, realsize);
-  return realsize;
-}
-
 // Função HTTP GET reutilizada do exemplo anterior
 json_t *http_get_json(const char *url);
 

@@ -79,11 +79,9 @@ int main() {
         return 1;
     }
 
-    Cart cart = { .user_id = 0, .n_products = 0 };
-
     char command[256];
     char categoria[100], criterio[2];
-    int user_id, produto_id, quantidade;
+    int user_id = 0, produto_id, quantidade;
 
     printf("\n\n");
     printf(" ooooooooo.   .oooooo..o   .oooooo.         .oooooo..o     .      \n"); 
@@ -94,69 +92,76 @@ int main() {
     printf(" 888         oo     .d8P `88b    ooo       oo     .d8P   888 . 888   888  888     888    .o \n");
     printf("o888o        8''88888P'   `Y8bood8P'       8''88888P'   '888'  `Y8bod8P' d888b    `Y8bod8P'\n");
     printf("\n");
-    
+
     while (1) {
         printf("\nComandos:");
         printf("\nUtilizadores \t\t\t - listar utilizadores");
-        printf("\nuTilizadore <id> \t\t - usar utilizador com o id escolhido");
+        printf("\nuTilizador <id> \t\t - usar utilizador com o id escolhido");
         printf("\nProdutos <categoria> <criterio>  - listar produtos, < (preço crescente), > (preço decrescente)");
-        if (cart.user_id != 0) {
+        if (user_id != 0) {
             printf("\nCarrinho \t\t\t - listar produtos que estão no carrinho");
-            printf("\nCategoriasCarrinho \t\t - listar categorias de produtos que estão no carrinho");
+            printf("\nfiltrar_Categorias_Carrinho \t - listar categorias de produtos que estão no carrinho");
             printf("\ncOmprar <produto> <quantidade> \t - adicionar produto ao carrinho");
             printf("\nFinalizar \t\t\t - finalizar compra");
         }
         printf("\nTerminar \t\t\t - terminar programa\n");
-        printf("\nDigite um comando: ");
+        printf("\nDigite o caracter inicial do comando: ");
 
         fgets(command, sizeof(command), stdin);
         command[strcspn(command, "\n")] = '\0';  // Remove o newline no final da string
 
-        if (strcmp(command, "Terminar") == 0) {
+        if (strcmp(command, "T") == 0) {
             break;
         }
-        else if (strcmp(command, "Utilizadores") == 0) {
+        else if (strcmp(command, "U") == 0) {
             listar_utilizadores(users);
         }
-        else if (sscanf(command, "uTilizador %d", &user_id) == 1) {
+        else if (sscanf(command, "u %d", &user_id) == 1) {
             if (user_id > 0 && user_id <= users->count) {
-                cart.user_id = user_id;
                 printf("Bem vindo %s\n", users->items[user_id - 1].name);
+                // O carrinho do utilizador não é reinicializado aqui para manter persistência
             } else {
                 printf("Utilizador com ID %d não encontrado.\n", user_id);
             }
         }
-        else if (sscanf(command, "Produtos %s %s", categoria, criterio) == 2) {
+        else if (sscanf(command, "P %s %s", categoria, criterio) == 2) {
             listar_produtos(products, categoria, criterio);
         }
-        else if (strcmp(command, "Carrinho") == 0) {
-            if (cart.user_id != 0) {
+        else if (strcmp(command, "C") == 0) {
+            if (user_id != 0) {
                 printf("\nCarrinho de compras:\n");
                 double total_a_pagar = 0.0;
-                for (size_t i = 0; i < cart.n_products; i++) {
-                    int produto_id = cart.products[i].id;
-                    int quantidade = cart.products[i].quantity;
+                for (size_t i = 0; i < users->items[user_id - 1].cart.n_products; i++) {
+                    int produto_id = users->items[user_id - 1].cart.products[i].id;
+                    int quantidade = users->items[user_id - 1].cart.products[i].quantity;
                     double preco = 0.0;
+                    double desconto = 0.0;
 
-                    // Encontrar o preço do produto no array de produtos
+                    // Encontrar o preço e o desconto do produto no array de produtos
                     for (size_t j = 0; j < products->count; j++) {
                         if (products->items[j].id == produto_id) {
                             preco = products->items[j].price;
+                            desconto = products->items[j].discountPercentage;
                             break;
                         }
                     }
 
-                    double preco_total = preco * quantidade;
-                    printf("Produto ID: %d, Preço: %.2f$, Quantidade: %d, Preço total: %.2f$\n", produto_id, preco, quantidade, preco_total);
-                    total_a_pagar += preco_total;
+                    double preco_total_sem_desconto = preco * quantidade;
+                    double valor_desconto = preco_total_sem_desconto * (desconto / 100);
+                    double preco_total_com_desconto = preco_total_sem_desconto - valor_desconto;
+
+                    printf("Produto ID: %d, Preço: %.2f$, Quantidade: %d, Desconto: %.2f%%, Preço total: %.2f$\n", 
+                           produto_id, preco, quantidade, desconto, preco_total_com_desconto);
+
+                    total_a_pagar += preco_total_com_desconto;
                 }
                 printf("\nTotal a pagar: %.2f$\n", total_a_pagar);
             } else {
                 printf("Por favor, faça login primeiro usando o comando 'uTilizador <id>'.\n");
             }
         }
-        else if (strcmp(command, "CategoriasCarrinho") == 0) {
-            if (cart.user_id != 0) {
+        else if (strcmp(command, "f") == 0) {
+            if (user_id != 0) {
                 void *handler = dlopen("./plugins/libcatcard.so", RTLD_NOW);
                 if (!handler) {
                     fprintf(stderr, "Erro ao carregar plugin/ ou função ainda em desenvolvimento\n");
@@ -174,13 +179,26 @@ int main() {
                 printf("Por favor, faça login primeiro usando o comando 'uTilizador <id>'.\n");
             }
         }
-        else if (sscanf(command, "cOmprar %d %d", &produto_id, &quantidade) == 2) {
-            if (cart.user_id != 0) {
+        else if (sscanf(command, "c %d %d", &produto_id, &quantidade) == 2) {
+            if (user_id != 0) {
                 if (produto_id > 0 && produto_id <= products->count) {
-                    cart.products[cart.n_products].id = produto_id;
-                    cart.products[cart.n_products].quantity = quantidade;
-                    cart.n_products++;
-                    printf("Produto adicionado ao carrinho.\n");
+                    // Verificar o estoque
+                    for (size_t j = 0; j < products->count; j++) {
+                        if (products->items[j].id == produto_id) {
+                            if (products->items[j].stock >= quantidade) {
+                                // Adicionar ao carrinho
+                                users->items[user_id - 1].cart.products[users->items[user_id - 1].cart.n_products].id = produto_id;
+                                users->items[user_id - 1].cart.products[users->items[user_id - 1].cart.n_products].quantity = quantidade;
+                                users->items[user_id - 1].cart.n_products++;
+                                // Diminuir o estoque
+                                products->items[j].stock -= quantidade;
+                                printf("Produto adicionado ao carrinho.\n");
+                            } else {
+                                printf("Stock insuficiente para o produto com ID %d.\n", produto_id);
+                            }
+                            break;
+                        }
+                    }
                 } else {
                     printf("Produto com ID %d não encontrado.\n", produto_id);
                 }
@@ -188,29 +206,48 @@ int main() {
                 printf("Por favor, faça login primeiro usando o comando 'uTilizador <id>'.\n");
             }
         }
-        else if (strcmp(command, "Finalizar") == 0) {
-            if (cart.user_id != 0) {
-                if (cart.n_products > 0) {
-                    double total_a_pagar = 0.0;
-                    for (size_t i = 0; i < cart.n_products; i++) {
-                        int produto_id = cart.products[i].id;
-                        int quantidade = cart.products[i].quantity;
-                        double preco = 0.0;
+        else if (strcmp(command, "F") == 0) {
+            if (user_id != 0) {
+                if (users->items[user_id - 1].cart.n_products > 0) {
+                    // Criar estrutura Cart
+                    Cart cart;
+                    cart.user_id = user_id;
+                    cart.n_products = users->items[user_id - 1].cart.n_products;
+                    memcpy(cart.products, users->items[user_id - 1].cart.products, cart.n_products * sizeof(cart.products[0]));
 
-                        // Encontrar o preço do produto no array de produtos
-                        for (size_t j = 0; j < products->count; j++) {
-                            if (products->items[j].id == produto_id) {
-                                preco = products->items[j].price;
-                                break;
+                    // Chamar a função cart_put
+                    if (cart_put(&cart)) {
+                        // Calcular o total a pagar com base nos dados do carrinho do utilizador
+                        double total_a_pagar = 0.0;
+                        for (size_t i = 0; i < cart.n_products; i++) {
+                            int produto_id = cart.products[i].id;
+                            int quantidade = cart.products[i].quantity;
+                            double preco = 0.0;
+                            double desconto = 0.0;
+
+                            // Encontrar o preço e o desconto do produto no array de produtos
+                            for (size_t j = 0; j < products->count; j++) {
+                                if (products->items[j].id == produto_id) {
+                                    preco = products->items[j].price;
+                                    desconto = products->items[j].discountPercentage;
+                                    break;
+                                }
                             }
+
+                            double preco_total_sem_desconto = preco * quantidade;
+                            double valor_desconto = preco_total_sem_desconto * (desconto / 100);
+                            double preco_total_com_desconto = preco_total_sem_desconto - valor_desconto;
+
+                            total_a_pagar += preco_total_com_desconto;
                         }
 
-                        double preco_total = preco * quantidade;
-                        total_a_pagar += preco_total;
+                        printf("Compra finalizada com sucesso! O utilizador %s pagou um total de %.2f$.\n", users->items[user_id - 1].name, total_a_pagar);
+
+                        // Limpar o carrinho do utilizador
+                        users->items[user_id - 1].cart.n_products = 0;
+                    } else {
+                        printf("Erro ao finalizar a compra. Por favor, tente novamente.\n");
                     }
-                    printf("Compra finalizada com sucesso! O utilizador %s pagou um total de %.2f$.\n", users->items[cart.user_id - 1].name, total_a_pagar);
-                    // Limpar o carrinho
-                    cart.n_products = 0;
                 } else {
                     printf("Carrinho vazio! Não é possível finalizar a compra.\n");
                 }

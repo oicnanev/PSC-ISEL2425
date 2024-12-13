@@ -16,6 +16,13 @@ typedef struct {
 typedef struct {
     int id;
     const char *name;
+    struct {
+        size_t n_products;
+        struct {
+            int id;
+            size_t quantity;
+        } products[100]; // Supondo um limite de 100 produtos por carrinho
+    } cart;
 } User;
 
 typedef struct {

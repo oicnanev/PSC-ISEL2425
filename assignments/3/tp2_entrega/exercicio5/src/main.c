@@ -55,9 +55,10 @@ void listar_produtos(Products *products, const char *categoria, const char *crit
 
     printf("\nProdutos na categoria '%s' (%s):\n", categoria, msg);
     for (size_t i = 0; i < count; i++) {
-        printf("ID: %d, Descrição: %s, Preço: %.2f, Categoria: %s\n",
-               produtos_filtrados[i].id, produtos_filtrados[i].description,
-               produtos_filtrados[i].price, produtos_filtrados[i].category);
+        printf("ID: %d, Nome: %s, Preço: %.2f, Categoria: %s, Desconto: %.2f, Stock: %ld\n ",
+               produtos_filtrados[i].id, produtos_filtrados[i].title,
+               produtos_filtrados[i].price, produtos_filtrados[i].category,
+               produtos_filtrados[i].discountPercentage, produtos_filtrados[i].stock);
     }
 
     free(produtos_filtrados);

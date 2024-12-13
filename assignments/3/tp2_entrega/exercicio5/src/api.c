@@ -37,12 +37,22 @@ Products *products_get() {
         json_integer_value(json_object_get(product_json, "id"));
     products->items[i].price =
         json_real_value(json_object_get(product_json, "price"));
+    const char *title =
+        json_string_value(json_object_get(product_json, "title"));
     const char *description =
         json_string_value(json_object_get(product_json, "description"));
     const char *category =
         json_string_value(json_object_get(product_json, "category"));
+    double discountPercentage =
+        json_real_value(json_object_get(product_json, "discountPercentage"));
+    long stock =
+        json_integer_value(json_object_get(product_json, "stock")); 
+
+    products->items[i].title = title ? strdup(title) : NULL;
     products->items[i].description = description ? strdup(description) : NULL;
     products->items[i].category = category ? strdup(category) : NULL;
+    products->items[i].discountPercentage = discountPercentage ? discountPercentage : 0;
+    products->items[i].stock = stock ? stock : 0;
   }
 
   json_decref(json);

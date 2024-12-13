@@ -6,8 +6,11 @@
 typedef struct {
     int id;
     float price;
+    const char *title;
     const char *description;
     const char *category;
+    double discountPercentage;
+    long stock;
 } Product;
 
 typedef struct {
